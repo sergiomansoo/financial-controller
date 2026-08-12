@@ -1,6 +1,20 @@
 spring:
   application:
     name: financial-controller
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/financial_controller}
+    username: ${DATABASE_USERNAME:financial_controller}
+    password: ${DATABASE_PASSWORD:financial_controller}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: true
 
 server:
   port: 8080
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:development-only-secret-must-be-replaced-before-production-use-123456789}
+    expiration-ms: ${JWT_EXPIRATION_MS:86400000}
