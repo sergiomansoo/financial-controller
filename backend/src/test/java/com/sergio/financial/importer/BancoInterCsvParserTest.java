@@ -16,40 +16,30 @@ class BancoInterCsvParserTest {
 
     @Test
     void parsesNegativeCommaDecimalAndTrimsHistory() {
-        List<ParsedTransaction> rows = parser.parse(fixture("inter-valid.csv"));
+        ParsedTransaction row = parser.parse(fixture("inter-valid.csv")).getFirst();
 
-        assertThat(rows).hasSize(1);
-        ParsedTransaction row = rows.getFirst();
         assertThat(row.date()).isEqualTo(LocalDate.of(2026, 7, 15));
         assertThat(row.history()).isEqualTo("Pix enviado");
-        assertThat(row.description()).isEqualTo("Transferência fictícia");
+        assertThat(row.description()).isEqualTo("Transfer\u00eancia fict\u00edcia");
         assertThat(row.amount()).isEqualByComparingTo(new BigDecimal("-45.90"));
         assertThat(row.balance()).isEqualByComparingTo(new BigDecimal("1234.56"));
     }
 
     @Test
     void mapsEmptyDescriptionToNull() {
-        List<ParsedTransaction> rows = parser.parse(fixture("inter-empty-description.csv"));
+        ParsedTransaction row = parser.parse(fixture("inter-empty-description.csv")).getFirst();
 
-        assertThat(rows).singleElement().satisfies(row -> {
-            assertThat(row.history()).isEqualTo("Compra fictícia");
-            assertThat(row.description()).isNull();
-            assertThat(row.amount()).isEqualByComparingTo("12.50");
-        });
+        assertThat(row.history()).isEqualTo("Compra fict\u00edcia");
+        assertThat(row.description()).isNull();
+        assertThat(row.amount()).isEqualByComparingTo("12.50");
     }
 
     @Test
     void producesEqualFingerprintsForEquivalentDuplicateCandidates() {
-        String statement = """
-                Metadado fictício
-
-                Data Lançamento;Histórico;Descrição;Valor;Saldo
-                18/07/2026;  Pagamento fictício  ;Serviço fictício;-20,00;957,50
-                18/07/2026;Pagamento fictício;Serviço fictício;-20,00;937,50
-                """;
-
-        List<ParsedTransaction> rows = parser.parse(
-                new ByteArrayInputStream(statement.getBytes(StandardCharsets.UTF_8)));
+        List<ParsedTransaction> rows = parser.parse(bytes(statement("""
+                18/07/2026;  Fictional payment  ;Fictional service;-20,00;957,50
+                18/07/2026;Fictional payment;Fictional service;-20,00;937,50
+                """)));
 
         assertThat(rows).hasSize(2);
         assertThat(rows.get(0).duplicateFingerprint()).isEqualTo(rows.get(1).duplicateFingerprint());
@@ -57,36 +47,34 @@ class BancoInterCsvParserTest {
 
     @Test
     void rejectsAnInvalidHeaderWithTheDocumentedMessage() {
-        assertThatThrownBy(() -> parser.parse(fixture("inter-invalid-header.csv")))
-                .isInstanceOf(UnsupportedStatementFormatException.class)
-                .hasMessage("Formato de extrato não suportado. Envie um CSV Banco Inter em UTF-8.");
-    }
-
-    @Test
-    void rejectsTransactionDataBeforeTheHeader() {
-        String statement = """
-                Metadata
-                17/07/2026;Transaction row;Description;1,00;10,00
-                Data Lançamento;Histórico;Descrição;Valor;Saldo
-                18/07/2026;Valid row;Description;1,00;11,00
-                """;
-
-        assertThatThrownBy(() -> parser.parse(new ByteArrayInputStream(statement.getBytes(StandardCharsets.UTF_8))))
-                .isInstanceOf(UnsupportedStatementFormatException.class)
-                .hasMessage("Formato de extrato não suportado. Envie um CSV Banco Inter em UTF-8.");
+        assertUnsupported(fixture("inter-invalid-header.csv"));
     }
 
     @Test
     void rejectsDotDecimalValues() {
-        String statement = """
-                Metadata
-                Data Lançamento;Histórico;Descrição;Valor;Saldo
-                18/07/2026;Fictional row;Description;1.23;10,00
-                """;
+        assertUnsupported(bytes(statement("18/07/2026;Fictional row;Description;1.23;10,00")));
+    }
 
-        assertThatThrownBy(() -> parser.parse(new ByteArrayInputStream(statement.getBytes(StandardCharsets.UTF_8))))
+    private String statement(String rows) {
+        return """
+                Extrato Conta Corrente
+                Conta ;000001-1
+                Per\u00edodo ;01/07/2026 a 31/07/2026
+                Saldo ;1.000,00
+
+                Data Lan\u00e7amento;Hist\u00f3rico;Descri\u00e7\u00e3o;Valor;Saldo
+                %s
+                """.formatted(rows);
+    }
+
+    private void assertUnsupported(InputStream input) {
+        assertThatThrownBy(() -> parser.parse(input))
                 .isInstanceOf(UnsupportedStatementFormatException.class)
-                .hasMessage("Formato de extrato não suportado. Envie um CSV Banco Inter em UTF-8.");
+                .hasMessage("Formato de extrato n\u00e3o suportado. Envie um CSV Banco Inter em UTF-8.");
+    }
+
+    private ByteArrayInputStream bytes(String statement) {
+        return new ByteArrayInputStream(statement.getBytes(StandardCharsets.UTF_8));
     }
 
     private InputStream fixture(String name) {

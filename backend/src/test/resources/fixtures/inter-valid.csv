@@ -1,7 +1,7 @@
-Extrato Banco Inter
-Conta: 000000-0
-Período: 01/07/2026 a 31/07/2026
-Gerado em: 31/07/2026
+Extrato Conta Corrente
+Conta ;000000-0
+Período ;01/07/2026 a 31/07/2026
+Saldo ;1.234,56
 
 Data Lançamento;Histórico;Descrição;Valor;Saldo
 15/07/2026;  Pix enviado  ;Transferência fictícia;-45,90;1.234,56

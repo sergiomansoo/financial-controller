@@ -1,5 +1,7 @@
-Extrato Banco Inter
-Conta: 000002-2
+Extrato Conta Corrente
+Conta ;000002-2
+Período ;01/07/2026 a 31/07/2026
+Saldo ;977,50
 
 Data;Histórico;Descrição;Valor;Saldo
 17/07/2026;Pagamento fictício;Descrição fictícia;-10,00;977,50
