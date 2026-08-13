@@ -178,6 +178,33 @@ class DashboardControllerIT {
                 .andExpect(jsonPath("$.exceeded").value(false));
     }
 
+    @Test
+    void reportsUserScopedCommitmentAndInvestmentPercentages() throws Exception {
+        String owner = register("Metrics owner", "metrics.owner@example.test");
+        String other = register("Metrics other", "metrics.other@example.test");
+        long incomeCategory = categoryId(owner, "Alimenta\u00e7\u00e3o");
+        long expenseCategory = categoryId(owner, "Outros");
+        long investmentCategory = categoryId(owner, "Investimentos");
+
+        createTransaction(owner, incomeCategory, "2026-07-10", "Fictional income", "300.00", "INCOME");
+        createTransaction(owner, expenseCategory, "2026-07-11", "Fictional expense", "-100.00", "EXPENSE");
+        createTransaction(owner, expenseCategory, "2026-07-12", "Fictional income", "100.00", "INCOME");
+        createTransaction(owner, investmentCategory, "2026-07-13", "Fictional investment", "50.00", "INVESTMENT");
+        createTransaction(other, expenseCategory, "2026-07-14", "Other user income", "900.00", "INCOME");
+
+        mockMvc.perform(get("/api/v1/dashboard").param("month", "2026-07").param("filter", "both")
+                        .header("Authorization", "Bearer " + owner))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totals.salaryCommittedPercent").value(25))
+                .andExpect(jsonPath("$.totals.receivedInvestedPercent").value(12.5));
+
+        mockMvc.perform(get("/api/v1/dashboard").param("month", "2026-08")
+                        .header("Authorization", "Bearer " + owner))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totals.salaryCommittedPercent").value(0))
+                .andExpect(jsonPath("$.totals.receivedInvestedPercent").value(0));
+    }
+
     private void createTransaction(String token, long categoryId, String date, String description, String amount, String type) throws Exception {
         mockMvc.perform(post("/api/v1/transactions").header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)

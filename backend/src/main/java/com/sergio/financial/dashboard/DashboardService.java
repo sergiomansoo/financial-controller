@@ -7,6 +7,7 @@ import com.sergio.financial.transaction.FinancialTransaction;
 import com.sergio.financial.transaction.FinancialTransactionRepository;
 import com.sergio.financial.transaction.TransactionType;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.YearMonth;
 import java.util.List;
 import java.util.Map;
@@ -42,9 +43,19 @@ public class DashboardService {
                                   List<CategoryExpense> expenses) {
         BigDecimal income = BigDecimal.ZERO;
         BigDecimal expense = BigDecimal.ZERO;
+        BigDecimal expenseCommitted = BigDecimal.ZERO;
+        BigDecimal incomeReceived = BigDecimal.ZERO;
+        BigDecimal receivedInvested = BigDecimal.ZERO;
         for (FinancialTransaction transaction : transactions
                 .findByUserIdAndDateGreaterThanEqualAndDateLessThanOrderByDateDescIdDesc(
                         userId, month.atDay(1), month.plusMonths(1).atDay(1))) {
+            if (transaction.getType() == TransactionType.INCOME) {
+                incomeReceived = incomeReceived.add(transaction.getAmount());
+            } else if (transaction.getType() == TransactionType.EXPENSE) {
+                expenseCommitted = expenseCommitted.add(transaction.getAmount().abs());
+            } else if (transaction.getType() == TransactionType.INVESTMENT) {
+                receivedInvested = receivedInvested.add(transaction.getAmount());
+            }
             if (transaction.getType() == TransactionType.INCOME && filter.includes(TransactionType.INCOME)) {
                 income = income.add(transaction.getAmount());
             }
@@ -56,7 +67,15 @@ public class DashboardService {
                 ? expenses.stream().max(java.util.Comparator.comparing(CategoryExpense::spent)).orElse(null)
                 : null;
         return new TotalsResponse(income.subtract(expense), income, expense,
-                largest == null ? null : largest.categoryName(), largest == null ? BigDecimal.ZERO : largest.spent());
+                largest == null ? null : largest.categoryName(), largest == null ? BigDecimal.ZERO : largest.spent(),
+                percentage(expenseCommitted, incomeReceived), percentage(receivedInvested, incomeReceived));
+    }
+
+    private BigDecimal percentage(BigDecimal amount, BigDecimal total) {
+        if (total.signum() == 0) {
+            return BigDecimal.ZERO.setScale(2);
+        }
+        return amount.multiply(BigDecimal.valueOf(100)).divide(total, 2, RoundingMode.HALF_UP);
     }
 
     private List<MonthlyEvolution> monthlyEvolution(Long userId, YearMonth month, DashboardFilter filter) {
@@ -94,7 +113,8 @@ public class DashboardService {
     }
 
     public record TotalsResponse(BigDecimal balance, BigDecimal income, BigDecimal expense, String largestExpenseCategory,
-                                 BigDecimal largestExpenseAmount) {
+                                 BigDecimal largestExpenseAmount, BigDecimal salaryCommittedPercent,
+                                 BigDecimal receivedInvestedPercent) {
     }
 
     public record DashboardResponse(TotalsResponse totals, List<CategorySpend> byCategory, List<MonthlyEvolution> monthlyEvolution,
