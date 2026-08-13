@@ -12,6 +12,9 @@ Aplicação full-stack para importar extratos CSV do Banco Inter, classificar la
 - Revisão de categoria com opção **Learn** para reaproveitar a regra em lançamentos futuros.
 - Orçamentos por categoria e mês, com alerta de estouro.
 - Dashboard responsivo com gráficos de gasto por categoria e evolução de seis meses; os gráficos possuem tabelas textuais para leitores de tela.
+- Navegação por rotas reais: dashboard, transações, importação, categorias, metas e configurações.
+- Filtro persistente de receitas, despesas ou ambos, aplicado ao dashboard e à tabela de transações.
+- Tema escuro inspirado em ledger, com gráficos Recharts, tabelas acessíveis e ações de transação.
 - Isolamento de todos os dados por usuário autenticado.
 
 ## Arquitetura
@@ -48,31 +51,37 @@ PostgreSQL
    Set-Location financial-controller
    ```
 
-2. Inicie um PostgreSQL descartável para desenvolvimento local.
+2. Garanta que exista um PostgreSQL em `localhost:5432` com o banco `financial_controller`. Se o seu PostgreSQL local já usa `postgres` / `postgres`, crie apenas o banco uma vez:
+
+   ```powershell
+   psql -U postgres -c "CREATE DATABASE financial_controller;"
+   ```
+
+   Alternativamente, inicie um PostgreSQL descartável para desenvolvimento local.
 
    ```powershell
    docker run --name financial-controller-postgres --rm `
      -e POSTGRES_DB=financial_controller `
-     -e POSTGRES_USER=financial `
-     -e POSTGRES_PASSWORD=change-me-local `
+     -e POSTGRES_USER=postgres `
+     -e POSTGRES_PASSWORD=postgres `
      -p 5432:5432 postgres:16
    ```
 
-3. Em outro terminal, configure e inicie a API. O segredo JWT deve ter pelo menos 32 caracteres e nunca deve ser enviado ao Git.
+3. Em um terminal, configure e inicie a API. Execute estes comandos a partir da raiz do repositório; o segredo JWT deve ter pelo menos 32 caracteres e nunca deve ser enviado ao Git.
 
    ```powershell
    Set-Location backend
    $env:DATABASE_URL='jdbc:postgresql://localhost:5432/financial_controller'
-   $env:DATABASE_USERNAME='financial'
-   $env:DATABASE_PASSWORD='change-me-local'
+   $env:DATABASE_USERNAME='postgres'
+   $env:DATABASE_PASSWORD='postgres'
    $env:JWT_SECRET='local-development-secret-with-at-least-32-characters'
-   $env:CORS_ALLOWED_ORIGIN='http://localhost:5173'
+   $env:APP_CORS_ALLOWED_ORIGIN='http://localhost:5173'
    .\mvnw.cmd spring-boot:run
    ```
 
    O Flyway aplica automaticamente as quatro migrações existentes na primeira inicialização.
 
-4. Em um terceiro terminal, inicie o frontend.
+4. Em um segundo terminal, inicie o frontend. Mantenha a API em execução no primeiro terminal.
 
    ```powershell
    Set-Location frontend
@@ -81,7 +90,13 @@ PostgreSQL
    npm run dev
    ```
 
-5. Abra `http://localhost:5173`, crie uma conta fictícia e siga o fluxo: importar extrato, revisar categorias, definir orçamento e consultar o dashboard.
+5. Abra `http://localhost:5173` (não misture `localhost` e `127.0.0.1`, pois CORS exige a origem exata), crie uma conta e siga o fluxo: importar extrato, revisar categorias, definir metas e consultar o dashboard.
+
+### Comandos de execução direta
+
+Para abrir o projeto novamente, não é preciso nenhum comando especial do Codex. Em dois terminais PowerShell, dentro da pasta clonada, use os dois blocos acima: o backend responde em `http://localhost:8080/api/v1` e o frontend em `http://localhost:5173`.
+
+Para encerrar, pressione `Ctrl+C` em cada terminal. Caso a porta 8080 ou 5173 já esteja ocupada, encerre o processo anterior antes de iniciar outro.
 
 ## Configuração
 
@@ -90,14 +105,14 @@ O backend não possui credenciais de produção embutidas. Estas variáveis são
 | Variável | Exemplo local | Descrição |
 | --- | --- | --- |
 | `DATABASE_URL` | `jdbc:postgresql://localhost:5432/financial_controller` | URL JDBC do PostgreSQL. |
-| `DATABASE_USERNAME` | `financial` | Usuário do banco. |
-| `DATABASE_PASSWORD` | `change-me-local` | Senha do banco. |
+| `DATABASE_USERNAME` | `postgres` | Usuário do banco local usado no guia. |
+| `DATABASE_PASSWORD` | `postgres` | Senha do banco local usado no guia. |
 | `JWT_SECRET` | valor aleatório com 32+ caracteres | Chave de assinatura JWT. |
 | `JWT_EXPIRATION_MS` | `86400000` | Opcional; duração do token em milissegundos. |
-| `CORS_ALLOWED_ORIGIN` | `http://localhost:5173` | Opcional; única origem liberada para a API. |
+| `APP_CORS_ALLOWED_ORIGIN` | `http://localhost:5173` | Opcional; única origem liberada para a API. |
 | `VITE_API_URL` | `http://localhost:8080/api/v1` | Opcional no frontend; base da API. |
 
-Para outro ambiente, substitua todas as credenciais de exemplo e configure `CORS_ALLOWED_ORIGIN` com a origem pública exata do frontend.
+Para outro ambiente, substitua todas as credenciais de exemplo e configure `APP_CORS_ALLOWED_ORIGIN` com a origem pública exata do frontend.
 
 ## Formato do CSV Banco Inter
 
@@ -132,13 +147,16 @@ Todas as rotas, exceto autenticação, exigem `Authorization: Bearer <token>`.
 | `POST` | `/api/v1/auth/register` | Cria uma conta e devolve JWT. |
 | `POST` | `/api/v1/auth/login` | Autentica uma conta existente. |
 | `GET` | `/api/v1/categories` | Lista categorias acessíveis ao usuário. |
+| `POST` | `/api/v1/categories` | Cria uma categoria do usuário. |
+| `DELETE` | `/api/v1/categories/{id}` | Exclui uma categoria do usuário quando ela não possui referências. |
+| `GET/POST/DELETE` | `/api/v1/category-rules` | Lista, cria ou remove regras de palavra-chave. |
 | `POST` | `/api/v1/imports` | Importa `multipart/form-data` com o campo `file`. |
-| `GET` | `/api/v1/transactions?month=YYYY-MM` | Lista transações do mês. |
+| `GET` | `/api/v1/transactions?month=YYYY-MM&page=0&size=10` | Lista transações paginadas, com filtros de categoria, data e tipo. |
 | `POST` | `/api/v1/transactions` | Cria lançamento manual com `date`, `description`, `amount`, `categoryId` e `type`. |
 | `PATCH` | `/api/v1/transactions/{id}/category` | Atualiza categoria com `{ "categoryId": 1, "learn": true }`. |
 | `GET` | `/api/v1/budgets?month=YYYY-MM` | Lista orçamentos do mês. |
 | `PUT` | `/api/v1/budgets/{categoryId}?month=YYYY-MM` | Cria ou atualiza orçamento com `{ "limit": 500.00 }`. |
-| `GET` | `/api/v1/dashboard?month=YYYY-MM` | Retorna gastos por categoria, série mensal e orçamentos. |
+| `GET` | `/api/v1/dashboard?month=YYYY-MM&filter=both` | Retorna KPIs, gastos por categoria, série mensal e metas; `filter` aceita `both`, `income` ou `expense`. |
 
 Erros seguem o formato:
 
@@ -167,7 +185,7 @@ npm test
 npm run build
 ```
 
-Na verificação final deste projeto, a suíte do backend executou 30 testes sem falhas; o frontend executou 24 testes sem falhas e gerou o build de produção. O Vite pode emitir um aviso não bloqueante sobre o tamanho do bundle Recharts.
+Na verificação final deste projeto, a suíte do backend executou 38 testes sem falhas; o frontend executou 45 testes sem falhas e gerou o build de produção. O Vite pode emitir um aviso não bloqueante sobre o tamanho do bundle Recharts.
 
 ## Organização do repositório
 
@@ -199,7 +217,7 @@ docs/
 | Sintoma | Verificação |
 | --- | --- |
 | API não inicia | Confirme `DATABASE_*` e `JWT_SECRET`; confira se PostgreSQL está acessível. |
-| Frontend recebe erro de CORS | Confira se `CORS_ALLOWED_ORIGIN` corresponde exatamente à URL aberta no navegador. |
+| Frontend recebe erro de CORS | Confira se `APP_CORS_ALLOWED_ORIGIN` corresponde exatamente à URL aberta no navegador. |
 | Importação rejeitada | Garanta UTF-8, `;`, metadados, linha em branco e o cabeçalho Banco Inter exato. |
 | Dashboard vazio | Crie/importa lançamentos no mesmo mês selecionado e defina um orçamento para a categoria. |
 | Erro de autenticação | Faça login novamente e confirme que o frontend usa a mesma URL da API configurada em `VITE_API_URL`. |
