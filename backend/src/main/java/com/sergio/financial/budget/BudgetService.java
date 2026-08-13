@@ -1,0 +1,9 @@
+package com.sergio.financial.budget;
+import com.sergio.financial.category.*; import com.sergio.financial.transaction.*; import com.sergio.financial.user.*; import java.math.BigDecimal; import java.time.*; import java.util.*; import org.springframework.stereotype.Service; import org.springframework.transaction.annotation.Transactional;
+@Service public class BudgetService { private final BudgetRepository budgets; private final CategoryRepository categories; private final UserRepository users; private final FinancialTransactionRepository tx;
+ public BudgetService(BudgetRepository b,CategoryRepository c,UserRepository u,FinancialTransactionRepository t){budgets=b;categories=c;users=u;tx=t;}
+ @Transactional public BudgetResponse upsert(Long uid,Long cid,YearMonth ym,BudgetRequest req){Category c=categories.findAccessibleByIdAndUserId(cid,uid).orElseThrow(TransactionNotFoundException::new); LocalDate m=ym.atDay(1); Budget b=budgets.findByUserIdAndCategoryIdAndMonth(uid,cid,m).orElseGet(()->new Budget(users.getReferenceById(uid),c,m,req.limit())); b.setLimit(req.limit()); budgets.save(b); return response(b,spent(uid,cid,ym));}
+ @Transactional(readOnly=true) public List<BudgetResponse> list(Long uid,YearMonth ym){return budgets.findByUserIdAndMonth(uid,ym.atDay(1)).stream().map(b->response(b,spent(uid,b.getCategory().getId(),ym))).toList();}
+ private BigDecimal spent(Long uid,Long cid,YearMonth ym){return tx.findByUserIdAndDateGreaterThanEqualAndDateLessThanOrderByDateDescIdDesc(uid,ym.atDay(1),ym.plusMonths(1).atDay(1)).stream().filter(t->t.getCategory().getId().equals(cid)&&t.getType()==TransactionType.EXPENSE).map(FinancialTransaction::getAmount).reduce(BigDecimal.ZERO,BigDecimal::add);}
+ private BudgetResponse response(Budget b,BigDecimal spent){return new BudgetResponse(b.getCategory().getId(),b.getCategory().getName(),spent,b.getLimit(),spent.compareTo(b.getLimit())>0);}
+}
