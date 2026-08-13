@@ -18,11 +18,11 @@ The import parser expects the following four fictitious metadata lines, one blan
 
 ```csv
 Extrato Conta Corrente
-Conta ;00000000-0
-Período ;01/08/2026 a 31/08/2026
-Saldo ;1000,00
+Conta;00000000-0
+Período;01/08/2026 a 31/08/2026
+Saldo;1000,00
 
-Data;Histórico;Descrição;Valor;Saldo
+Data Lançamento;Histórico;Descrição;Valor;Saldo
 10/08/2026;Pix enviado   ;;-45,90;954,10
 11/08/2026;Salário sintético;Empregador de teste;1000,00;1954,10
 12/08/2026;Mercado de teste;Compra fictícia;-120,00;1834,10
