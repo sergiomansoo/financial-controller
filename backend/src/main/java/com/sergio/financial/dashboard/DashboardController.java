@@ -1,2 +1,23 @@
-package com.sergio.financial.dashboard; import java.time.YearMonth; import org.springframework.security.core.Authentication; import org.springframework.web.bind.annotation.*;
-@RestController @RequestMapping("/api/v1/dashboard") public class DashboardController {private final DashboardService service; public DashboardController(DashboardService s){service=s;} @GetMapping public DashboardService.DashboardResponse get(@RequestParam YearMonth month,Authentication a){return service.dashboard(Long.valueOf(a.getName()),month);}}
+package com.sergio.financial.dashboard;
+
+import java.time.YearMonth;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequestMapping("/api/v1/dashboard")
+public class DashboardController {
+    private final DashboardService service;
+
+    public DashboardController(DashboardService service) {
+        this.service = service;
+    }
+
+    @GetMapping
+    public DashboardService.DashboardResponse get(@RequestParam YearMonth month, Authentication authentication) {
+        return service.dashboard(Long.valueOf(authentication.getName()), month);
+    }
+}

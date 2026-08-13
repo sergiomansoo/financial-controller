@@ -11,8 +11,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 @RestControllerAdvice
 public class ApiExceptionHandler {
@@ -45,6 +47,15 @@ public class ApiExceptionHandler {
     @ExceptionHandler(HttpMessageNotReadableException.class)
     ResponseEntity<ErrorResponse> malformedJson(HttpMessageNotReadableException exception) {
         return ResponseEntity.badRequest().body(new ErrorResponse(400, "VALIDATION_ERROR", "Validation failed.", Map.of()));
+    }
+
+    @ExceptionHandler({MethodArgumentTypeMismatchException.class, MissingServletRequestParameterException.class})
+    ResponseEntity<ErrorResponse> requestParameter(Exception exception) {
+        String parameter = exception instanceof MethodArgumentTypeMismatchException mismatch
+                ? mismatch.getName()
+                : ((MissingServletRequestParameterException) exception).getParameterName();
+        return ResponseEntity.badRequest().body(new ErrorResponse(400, "VALIDATION_ERROR", "Validation failed.",
+                Map.of(parameter, "Invalid or missing request parameter.")));
     }
 
     @ExceptionHandler(UnsupportedStatementFormatException.class)

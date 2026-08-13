@@ -1,6 +1,76 @@
 package com.sergio.financial.dashboard;
-import com.sergio.financial.budget.*; import com.sergio.financial.transaction.*; import java.math.BigDecimal; import java.time.*; import java.util.*; import org.springframework.stereotype.Service;
-@Service public class DashboardService { private final FinancialTransactionRepository tx; private final BudgetService budgets; public DashboardService(FinancialTransactionRepository t,BudgetService b){tx=t;budgets=b;}
- public DashboardResponse dashboard(Long uid,YearMonth ym){var rows=tx.findByUserIdAndDateGreaterThanEqualAndDateLessThanOrderByDateDescIdDesc(uid,ym.atDay(1),ym.plusMonths(1).atDay(1)); Map<Long,CategorySpend> cats=new LinkedHashMap<>(); for(var t:rows)if(t.getType()==TransactionType.EXPENSE){var c=t.getCategory(); cats.merge(c.getId(),new CategorySpend(c.getId(),c.getName(),t.getAmount()),(a,b)->new CategorySpend(a.categoryId(),a.categoryName(),a.spent().add(b.spent())));} Map<YearMonth,Totals> months=new TreeMap<>(); for(var t:tx.findByUserIdAndDateGreaterThanEqualAndDateLessThanOrderByDateDescIdDesc(uid,ym.minusMonths(5).atDay(1),ym.plusMonths(1).atDay(1))){YearMonth m=YearMonth.from(t.getDate()); Totals old=months.getOrDefault(m,new Totals(BigDecimal.ZERO,BigDecimal.ZERO)); months.put(m,t.getType()==TransactionType.INCOME?new Totals(old.income().add(t.getAmount()),old.expense()):t.getType()==TransactionType.EXPENSE?new Totals(old.income(),old.expense().add(t.getAmount())):old);} return new DashboardResponse(new ArrayList<>(cats.values()),months.entrySet().stream().map(e->new MonthlyEvolution(e.getKey().toString(),e.getValue().income(),e.getValue().expense())).toList(),budgets.list(uid,ym));}
- public record CategorySpend(Long categoryId,String categoryName,BigDecimal spent){} public record MonthlyEvolution(String month,BigDecimal income,BigDecimal expense){} record Totals(BigDecimal income,BigDecimal expense){} public record DashboardResponse(List<CategorySpend> byCategory,List<MonthlyEvolution> monthlyEvolution,List<BudgetResponse> budgets){}
+
+import com.sergio.financial.budget.BudgetResponse;
+import com.sergio.financial.budget.BudgetService;
+import com.sergio.financial.transaction.CategoryExpense;
+import com.sergio.financial.transaction.FinancialTransaction;
+import com.sergio.financial.transaction.FinancialTransactionRepository;
+import com.sergio.financial.transaction.TransactionType;
+import java.math.BigDecimal;
+import java.time.YearMonth;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.stream.Collectors;
+import org.springframework.stereotype.Service;
+
+@Service
+public class DashboardService {
+    private final FinancialTransactionRepository transactions;
+    private final BudgetService budgets;
+
+    public DashboardService(FinancialTransactionRepository transactions, BudgetService budgets) {
+        this.transactions = transactions;
+        this.budgets = budgets;
+    }
+
+    public DashboardResponse dashboard(Long userId, YearMonth month) {
+        List<CategoryExpense> expenses = budgets.categoryExpenses(userId, month);
+        Map<Long, BigDecimal> expensesByCategory = expenses.stream()
+                .collect(Collectors.toMap(CategoryExpense::categoryId, CategoryExpense::spent));
+
+        return new DashboardResponse(
+                expenses.stream()
+                        .map(expense -> new CategorySpend(expense.categoryId(), expense.categoryName(), expense.spent()))
+                        .toList(),
+                monthlyEvolution(userId, month),
+                budgets.list(userId, month, expensesByCategory));
+    }
+
+    private List<MonthlyEvolution> monthlyEvolution(Long userId, YearMonth month) {
+        YearMonth firstMonth = month.minusMonths(5);
+        Map<YearMonth, Totals> totalsByMonth = new TreeMap<>();
+        for (YearMonth current = firstMonth; !current.isAfter(month); current = current.plusMonths(1)) {
+            totalsByMonth.put(current, new Totals(BigDecimal.ZERO, BigDecimal.ZERO));
+        }
+
+        for (FinancialTransaction transaction : transactions
+                .findByUserIdAndDateGreaterThanEqualAndDateLessThanOrderByDateDescIdDesc(
+                        userId, firstMonth.atDay(1), month.plusMonths(1).atDay(1))) {
+            YearMonth transactionMonth = YearMonth.from(transaction.getDate());
+            Totals current = totalsByMonth.get(transactionMonth);
+            if (transaction.getType() == TransactionType.INCOME) {
+                totalsByMonth.put(transactionMonth, new Totals(current.income().add(transaction.getAmount()), current.expense()));
+            } else if (transaction.getType() == TransactionType.EXPENSE) {
+                totalsByMonth.put(transactionMonth, new Totals(current.income(), current.expense().add(transaction.getAmount())));
+            }
+        }
+
+        return totalsByMonth.entrySet().stream()
+                .map(entry -> new MonthlyEvolution(entry.getKey().toString(), entry.getValue().income(), entry.getValue().expense()))
+                .toList();
+    }
+
+    public record CategorySpend(Long categoryId, String categoryName, BigDecimal spent) {
+    }
+
+    public record MonthlyEvolution(String month, BigDecimal income, BigDecimal expense) {
+    }
+
+    private record Totals(BigDecimal income, BigDecimal expense) {
+    }
+
+    public record DashboardResponse(List<CategorySpend> byCategory, List<MonthlyEvolution> monthlyEvolution,
+                                    List<BudgetResponse> budgets) {
+    }
 }

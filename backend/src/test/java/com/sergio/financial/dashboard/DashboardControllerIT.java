@@ -43,8 +43,8 @@ class DashboardControllerIT {
 
         mockMvc.perform(put("/api/v1/budgets/{id}", categoryId).param("month", "2026-07")
                         .header("Authorization", "Bearer " + token).contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"limit\":20.00}"))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.limit").value(20))
+                        .content("{\"limit\":10.00}"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.limit").value(10))
                 .andExpect(jsonPath("$.exceeded").value(false));
 
         mockMvc.perform(get("/api/v1/budgets").param("month", "2026-07").header("Authorization", "Bearer " + token))
@@ -67,7 +67,33 @@ class DashboardControllerIT {
         createTransaction(owner, ownerCategory, "2026-07-20", "July expense", "7.00", "EXPENSE");
         mockMvc.perform(get("/api/v1/dashboard").param("month", "2026-07").header("Authorization", "Bearer " + owner))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.byCategory[0].spent").value(7))
-                .andExpect(jsonPath("$.monthlyEvolution").isArray()).andExpect(jsonPath("$.budgets").isArray());
+                .andExpect(jsonPath("$.monthlyEvolution.length()").value(6))
+                .andExpect(jsonPath("$.monthlyEvolution[0].month").value("2026-02"))
+                .andExpect(jsonPath("$.monthlyEvolution[0].income").value(0))
+                .andExpect(jsonPath("$.monthlyEvolution[0].expense").value(0))
+                .andExpect(jsonPath("$.monthlyEvolution[4].expense").value(3))
+                .andExpect(jsonPath("$.monthlyEvolution[5].expense").value(7))
+                .andExpect(jsonPath("$.budgets").isArray());
+    }
+
+    @Test
+    void returnsStandardValidationErrorsForMissingOrInvalidMonth() throws Exception {
+        String token = register("Month User", "month.user@example.test");
+
+        mockMvc.perform(get("/api/v1/budgets").header("Authorization", "Bearer " + token))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
+                .andExpect(jsonPath("$.message").isNotEmpty())
+                .andExpect(jsonPath("$.fieldErrors.month").exists());
+
+        mockMvc.perform(get("/api/v1/dashboard").param("month", "July-2026")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
+                .andExpect(jsonPath("$.message").isNotEmpty())
+                .andExpect(jsonPath("$.fieldErrors.month").exists());
     }
 
     private void createTransaction(String token, long categoryId, String date, String description, String amount, String type) throws Exception {
