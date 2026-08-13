@@ -151,13 +151,15 @@ class AuthControllerIT {
     }
 
     @Test
-    void acceptsLocalFrontendCorsPreflight() throws Exception {
+    void acceptsLocalFrontendDeleteCorsPreflight() throws Exception {
         mockMvc.perform(options("/api/v1/categories")
                         .header("Origin", "http://localhost:5173")
-                        .header("Access-Control-Request-Method", "GET"))
+                        .header("Access-Control-Request-Method", "DELETE"))
                 .andExpect(status().isOk())
                 .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers
-                        .header().string("Access-Control-Allow-Origin", "http://localhost:5173"));
+                        .header().string("Access-Control-Allow-Origin", "http://localhost:5173"))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers
+                        .header().string("Access-Control-Allow-Methods", org.hamcrest.Matchers.containsString("DELETE")));
     }
 
     private String register(String name, String email, String password) throws Exception {
