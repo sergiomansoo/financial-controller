@@ -68,7 +68,7 @@ export function TransactionTable({ month }: TransactionTableProps) {
             <tr key={transaction.id} className="border-t">
               <td>{transaction.date}</td>
               <td>
-                {transaction.description}
+                {transaction.description ?? transaction.history}
                 {transaction.needsReview && <span className="ml-2 rounded bg-amber-100 px-2 py-1 text-sm">Review duplicate</span>}
               </td>
               <td>{transaction.amount}</td>

@@ -38,9 +38,10 @@ export interface ImportResponse {
 export interface Transaction {
   id: string | number
   date: string
-  description: string
+  history: string
+  description: string | null
   amount: number
-  categoryId: string | number
-  categoryName: string
+  category: Category
+  type: string
   needsReview: boolean
 }

@@ -9,9 +9,10 @@ interface CategoryEditorProps {
 }
 
 export function CategoryEditor({ categories, transaction, onSave }: CategoryEditorProps) {
-  const [categoryId, setCategoryId] = useState(String(transaction.categoryId))
+  const [categoryId, setCategoryId] = useState(String(transaction.category.id))
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const description = transaction.description ?? transaction.history
 
   async function save() {
     setError(null)
@@ -27,7 +28,7 @@ export function CategoryEditor({ categories, transaction, onSave }: CategoryEdit
 
   return (
     <div>
-      <label htmlFor={`category-${transaction.id}`}>Category for {transaction.description}</label>
+      <label htmlFor={`category-${transaction.id}`}>Category for {description}</label>
       <select
         className="ml-2 border p-1"
         id={`category-${transaction.id}`}
@@ -44,7 +45,7 @@ export function CategoryEditor({ categories, transaction, onSave }: CategoryEdit
         onClick={save}
         type="button"
       >
-        {isSaving ? 'Saving…' : `Learn category for ${transaction.description}`}
+        {isSaving ? 'Saving…' : `Learn category for ${description}`}
       </button>
       {error && <p role="alert">{error}</p>}
     </div>

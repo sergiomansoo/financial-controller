@@ -6,35 +6,37 @@ import { TransactionTable } from './TransactionTable'
 const transaction = {
   id: 'transaction-1',
   date: '2026-08-12',
-  description: 'Pix Store',
+  history: 'Pix Store',
+  description: null,
   amount: -45.9,
-  categoryId: 'other',
-  categoryName: 'Outros',
+  category: { id: 'other', name: 'Other' },
+  type: 'EXPENSE',
   needsReview: true,
 }
 
 const categories = [
-  { id: 'other', name: 'Outros' },
-  { id: 'food', name: 'Alimentação' },
+  { id: 'other', name: 'Other' },
+  { id: 'food', name: 'Food' },
 ]
 
 function mockApi() {
-  const fetchMock = vi.fn().mockResolvedValueOnce(
-    new Response(JSON.stringify([transaction]), {
+  const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+    if (init?.method === 'PATCH') {
+      return new Response(JSON.stringify({
+        ...transaction,
+        category: { id: 'food', name: 'Food' },
+      }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    }
+
+    const isCategoriesRequest = String(input).endsWith('/categories')
+    return new Response(JSON.stringify(isCategoriesRequest ? categories : [transaction]), {
       status: 200,
       headers: { 'Content-Type': 'application/json' },
-    }),
-  ).mockResolvedValueOnce(
-    new Response(JSON.stringify(categories), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    }),
-  ).mockResolvedValueOnce(
-    new Response(JSON.stringify({ ...transaction, categoryId: 'food', categoryName: 'Alimentação' }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    }),
-  )
+    })
+  })
   vi.stubGlobal('fetch', fetchMock)
   return fetchMock
 }
@@ -52,21 +54,20 @@ describe('TransactionTable', () => {
     expect(await screen.findByText(/review duplicate/i)).toBeInTheDocument()
   })
 
-  it('sends the selected category with learn enabled', async () => {
+  it('sends the transaction category id with learn enabled', async () => {
     const fetchMock = mockApi()
 
     render(<TransactionTable month="2026-08" />)
 
-    const categoryEditor = await screen.findByLabelText('Category for Pix Store')
-    fireEvent.change(categoryEditor, { target: { value: 'food' } })
+    await screen.findByLabelText('Category for Pix Store')
     fireEvent.click(screen.getByRole('button', { name: 'Learn category for Pix Store' }))
 
     await waitFor(() => {
-      expect(fetchMock).toHaveBeenLastCalledWith(
+      expect(fetchMock).toHaveBeenCalledWith(
         'http://localhost:8080/api/v1/transactions/transaction-1/category',
         expect.objectContaining({
           method: 'PATCH',
-          body: JSON.stringify({ categoryId: 'food', learn: true }),
+          body: JSON.stringify({ categoryId: 'other', learn: true }),
         }),
       )
     })
