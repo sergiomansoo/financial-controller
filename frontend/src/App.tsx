@@ -1,4 +1,4 @@
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+import { BrowserRouter, Navigate, Outlet, Route, Routes } from 'react-router-dom'
 
 import { AppLayout } from './components/AppLayout'
 import { ProtectedRoute } from './components/ProtectedRoute'
@@ -16,38 +16,24 @@ import { SettingsPage } from './pages/SettingsPage'
 function App() {
   return (
     <BrowserRouter>
-      <AuthProvider><MovementFilterProvider>
-        <AppLayout>
-          <Routes>
+      <AuthProvider><MovementFilterProvider><Routes>
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
-            <Route
-              path="/dashboard"
-              element={
-                <ProtectedRoute>
-                  <DashboardPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/transacoes"
-              element={
-                <ProtectedRoute>
-                  <TransactionsPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route path="/transactions" element={<Navigate to="/transacoes" replace />} />
-            <Route path="/importar" element={<ProtectedRoute><ImportPage /></ProtectedRoute>} />
-            <Route path="/categorias" element={<ProtectedRoute><CategoriesPage /></ProtectedRoute>} />
-            <Route path="/metas" element={<ProtectedRoute><GoalsPage /></ProtectedRoute>} />
-            <Route path="/configuracoes" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
+            <Route element={<ProtectedLedgerLayout />}>
+              <Route path="/dashboard" element={<DashboardPage />} />
+              <Route path="/transacoes" element={<TransactionsPage />} />
+              <Route path="/transactions" element={<Navigate to="/transacoes" replace />} />
+              <Route path="/importar" element={<ImportPage />} />
+              <Route path="/categorias" element={<CategoriesPage />} />
+              <Route path="/metas" element={<GoalsPage />} />
+              <Route path="/configuracoes" element={<SettingsPage />} />
+            </Route>
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
-          </Routes>
-        </AppLayout>
-      </MovementFilterProvider></AuthProvider>
+          </Routes></MovementFilterProvider></AuthProvider>
     </BrowserRouter>
   )
 }
+
+function ProtectedLedgerLayout() { return <ProtectedRoute><AppLayout><Outlet /></AppLayout></ProtectedRoute> }
 
 export default App

@@ -11,6 +11,12 @@ describe('RegisterPage', () => {
     vi.unstubAllGlobals()
   })
 
+  it('uses ledger auth controls with readable token styles', () => {
+    render(<MemoryRouter><AuthProvider><RegisterPage /></AuthProvider></MemoryRouter>)
+    expect(screen.getByLabelText('Name')).toHaveClass('ledger-auth-control')
+    expect(screen.getByLabelText('Password')).toHaveClass('ledger-auth-control')
+  })
+
   it('persists the returned session and redirects to the dashboard after registration', async () => {
     vi.stubGlobal(
       'fetch',

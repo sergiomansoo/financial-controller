@@ -33,6 +33,12 @@ describe('LoginPage', () => {
     vi.unstubAllGlobals()
   })
 
+  it('uses ledger auth controls with readable token styles', () => {
+    render(<MemoryRouter><AuthProvider><LoginPage /></AuthProvider></MemoryRouter>)
+    expect(screen.getByLabelText('Email')).toHaveClass('ledger-auth-control')
+    expect(screen.getByRole('main')).toHaveClass('ledger-auth-layout')
+  })
+
   it('shows the server validation message after a failed login', async () => {
     vi.stubGlobal(
       'fetch',
