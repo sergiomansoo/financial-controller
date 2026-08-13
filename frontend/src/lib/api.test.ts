@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { ApiError, login } from './api'
+import { ApiError, getDashboard, login } from './api'
 
 describe('API client', () => {
   afterEach(() => {
@@ -52,5 +52,12 @@ describe('API client', () => {
       code: 'INVALID_CREDENTIALS',
       message: 'Invalid email or password.',
     } satisfies Partial<ApiError>)
+  })
+
+  it.each(['both', 'income', 'expense'] as const)('sends the selected dashboard filter (%s) to the aggregate API', async (filter) => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ totals: {}, byCategory: [], monthlyEvolution: [], budgets: [] }), { status: 200 }))
+    vi.stubGlobal('fetch', fetchMock)
+    await getDashboard('2026-08', filter)
+    expect(fetchMock).toHaveBeenCalledWith(`http://localhost:8080/api/v1/dashboard?month=2026-08&filter=${filter}`, expect.any(Object))
   })
 })
