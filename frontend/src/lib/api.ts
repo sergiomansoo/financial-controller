@@ -4,7 +4,9 @@ import type {
   AuthCredentials,
   AuthResponse,
   Category,
+  DashboardData,
   ImportResponse,
+  ManualTransactionInput,
   RegistrationDetails,
   Transaction,
 } from '../types/api'
@@ -89,3 +91,7 @@ export function updateTransactionCategory(
     body: JSON.stringify({ categoryId, learn: true }),
   })
 }
+
+export function getDashboard(month: string) { return request<DashboardData>(`/dashboard?month=${encodeURIComponent(month)}`) }
+export function updateBudget(categoryId: string | number, month: string, limit: number) { return request<void>(`/budgets/${categoryId}?month=${encodeURIComponent(month)}`, { method: 'PUT', body: JSON.stringify({ limit }) }) }
+export function createTransaction(transaction: ManualTransactionInput) { return request<Transaction>('/transactions', { method: 'POST', body: JSON.stringify(transaction) }) }

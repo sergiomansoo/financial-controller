@@ -1,0 +1,3 @@
+import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import type { MonthlyEvolution } from '../types/api'
+export function MonthlyChart({ data }: { data: MonthlyEvolution[] }) { if (!data.length) return <p>No monthly evolution available.</p>; return <section aria-labelledby="monthly-chart-heading" className="h-72 rounded border bg-white p-4"><h2 id="monthly-chart-heading">Monthly evolution</h2><ResponsiveContainer><LineChart data={data}><XAxis dataKey="month" /><YAxis /><Tooltip /><Line dataKey="income" /><Line dataKey="expense" /></LineChart></ResponsiveContainer></section> }

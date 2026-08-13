@@ -45,3 +45,9 @@ export interface Transaction {
   type: string
   needsReview: boolean
 }
+
+export interface Budget { categoryId: string | number; categoryName: string; limit: number; spent: number; exceeded: boolean }
+export interface CategorySpending { categoryId: string | number; categoryName: string; spent: number }
+export interface MonthlyEvolution { month: string; income: number; expense: number }
+export interface DashboardData { byCategory: CategorySpending[]; monthlyEvolution: MonthlyEvolution[]; budgets: Budget[] }
+export interface ManualTransactionInput { date: string; description: string; amount: number; categoryId: string | number; type: string }
