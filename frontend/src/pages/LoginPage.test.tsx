@@ -22,7 +22,7 @@ function fillCredentials() {
   fireEvent.change(screen.getByLabelText(/email/i), {
     target: { value: 'ada@example.com' },
   })
-  fireEvent.change(screen.getByLabelText(/password/i), {
+  fireEvent.change(screen.getByLabelText(/senha/i), {
     target: { value: 'correct-horse-battery-staple' },
   })
 }
@@ -52,7 +52,7 @@ describe('LoginPage', () => {
 
     renderLogin()
     fillCredentials()
-    fireEvent.click(screen.getByRole('button', { name: /sign in/i }))
+    fireEvent.click(screen.getByRole('button', { name: 'Entrar' }))
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
       'Invalid email or password.',
@@ -76,7 +76,7 @@ describe('LoginPage', () => {
 
     renderLogin()
     fillCredentials()
-    fireEvent.click(screen.getByRole('button', { name: /sign in/i }))
+    fireEvent.click(screen.getByRole('button', { name: 'Entrar' }))
 
     await waitFor(() => {
       expect(screen.getByRole('heading', { name: 'Dashboard' })).toBeInTheDocument()

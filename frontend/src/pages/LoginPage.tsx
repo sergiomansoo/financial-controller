@@ -25,29 +25,29 @@ export function LoginPage() {
       setError(
         caughtError instanceof ApiError
           ? caughtError.message
-          : 'Unable to sign in. Please try again.',
+          : 'Não foi possível entrar. Tente novamente.',
       )
     }
   }
 
   return (
     <main className="ledger-auth-layout"><section className="ledger-auth-card">
-      <h1>Sign in</h1><form className="ledger-auth-form" onSubmit={handleSubmit}>
+      <h1>Entrar</h1><form className="ledger-auth-form" onSubmit={handleSubmit}>
         <div>
           <label htmlFor="email">Email</label>
           <input className="ledger-auth-control" id="email" name="email" required type="email" />
         </div>
         <div>
-          <label htmlFor="password">Password</label>
+          <label htmlFor="password">Senha</label>
           <input className="ledger-auth-control" id="password" name="password" required type="password" />
         </div>
         {error && <p role="alert">{error}</p>}
         <button className="ledger-button" type="submit">
-          Sign in
+          Entrar
         </button>
       </form>
       <p>
-        Need an account? <Link to="/register">Register</Link>
+        Não tem uma conta? <Link to="/register">Criar conta</Link>
       </p>
       </section></main>
   )

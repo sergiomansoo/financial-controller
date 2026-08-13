@@ -26,16 +26,16 @@ export function RegisterPage() {
       setError(
         caughtError instanceof ApiError
           ? caughtError.message
-          : 'Unable to register. Please try again.',
+          : 'Não foi possível criar a conta. Tente novamente.',
       )
     }
   }
 
   return (
     <main className="ledger-auth-layout"><section className="ledger-auth-card">
-      <h1>Create account</h1><form className="ledger-auth-form" onSubmit={handleSubmit}>
+      <h1>Criar conta</h1><form className="ledger-auth-form" onSubmit={handleSubmit}>
         <div>
-          <label htmlFor="name">Name</label>
+          <label htmlFor="name">Nome</label>
           <input className="ledger-auth-control" id="name" name="name" required />
         </div>
         <div>
@@ -43,16 +43,16 @@ export function RegisterPage() {
           <input className="ledger-auth-control" id="email" name="email" required type="email" />
         </div>
         <div>
-          <label htmlFor="password">Password</label>
+          <label htmlFor="password">Senha</label>
           <input className="ledger-auth-control" id="password" name="password" required type="password" />
         </div>
         {error && <p role="alert">{error}</p>}
         <button className="ledger-button" type="submit">
-          Register
+          Criar conta
         </button>
       </form>
       <p>
-        Already have an account? <Link to="/login">Sign in</Link>
+        Já tem uma conta? <Link to="/login">Entrar</Link>
       </p>
       </section></main>
   )

@@ -13,8 +13,8 @@ describe('RegisterPage', () => {
 
   it('uses ledger auth controls with readable token styles', () => {
     render(<MemoryRouter><AuthProvider><RegisterPage /></AuthProvider></MemoryRouter>)
-    expect(screen.getByLabelText('Name')).toHaveClass('ledger-auth-control')
-    expect(screen.getByLabelText('Password')).toHaveClass('ledger-auth-control')
+    expect(screen.getByLabelText('Nome')).toHaveClass('ledger-auth-control')
+    expect(screen.getByLabelText('Senha')).toHaveClass('ledger-auth-control')
   })
 
   it('persists the returned session and redirects to the dashboard after registration', async () => {
@@ -43,16 +43,16 @@ describe('RegisterPage', () => {
       </MemoryRouter>,
     )
 
-    fireEvent.change(screen.getByLabelText(/^name$/i), {
+    fireEvent.change(screen.getByLabelText(/^nome$/i), {
       target: { value: 'Grace Hopper' },
     })
     fireEvent.change(screen.getByLabelText(/email/i), {
       target: { value: 'grace@example.com' },
     })
-    fireEvent.change(screen.getByLabelText(/password/i), {
+    fireEvent.change(screen.getByLabelText(/senha/i), {
       target: { value: 'correct-horse-battery-staple' },
     })
-    fireEvent.click(screen.getByRole('button', { name: /register/i }))
+    fireEvent.click(screen.getByRole('button', { name: 'Criar conta' }))
 
     await waitFor(() => {
       expect(screen.getByRole('heading', { name: 'Dashboard' })).toBeInTheDocument()
