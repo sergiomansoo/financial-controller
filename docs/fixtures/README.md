@@ -12,16 +12,16 @@ These are illustrative test identities only. Replace them with unique `.test` id
 
 ## Synthetic CSV examples
 
-The import parser expects five metadata lines, then the Banco Inter header, followed by semicolon-delimited UTF-8 rows. Use values invented solely for testing.
+The import parser expects the following four fictitious metadata lines, one blank line, then the Banco Inter header, followed by semicolon-delimited UTF-8 rows. Use values invented solely for testing.
 
 `valid-inter-fixture.csv`:
 
 ```csv
-Relatório fictício 1
-Relatório fictício 2
-Relatório fictício 3
-Relatório fictício 4
-Relatório fictício 5
+Extrato Conta Corrente
+Conta ;00000000-0
+Período ;01/08/2026 a 31/08/2026
+Saldo ;1000,00
+
 Data;Histórico;Descrição;Valor;Saldo
 10/08/2026;Pix enviado   ;;-45,90;954,10
 11/08/2026;Salário sintético;Empregador de teste;1000,00;1954,10
@@ -38,16 +38,16 @@ Coverage embedded in this file:
 `invalid-header-fixture.csv`:
 
 ```csv
-Relatório fictício 1
-Relatório fictício 2
-Relatório fictício 3
-Relatório fictício 4
-Relatório fictício 5
-Date,History,Description,Amount,Balance
-10/08/2026,Pix fictício,, -45.90,954.10
+Extrato Conta Corrente
+Conta ;00000000-0
+Período ;01/08/2026 a 31/08/2026
+Saldo ;1000,00
+
+Date;History;Description;Amount;Balance
+10/08/2026;Pix fictício;;-45,90;954,10
 ```
 
-This deliberately has a non-Banco-Inter header and comma delimiter; it must be rejected as unsupported, without creating transactions.
+This deliberately has a non-Banco-Inter header; it must be rejected as unsupported, without creating transactions.
 
 ## Suggested dashboard and isolation data
 
