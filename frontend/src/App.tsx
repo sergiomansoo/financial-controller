@@ -1,8 +1,33 @@
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+
+import { AppLayout } from './components/AppLayout'
+import { ProtectedRoute } from './components/ProtectedRoute'
+import { AuthProvider } from './lib/auth'
+import { DashboardPage } from './pages/DashboardPage'
+import { LoginPage } from './pages/LoginPage'
+import { RegisterPage } from './pages/RegisterPage'
+
 function App() {
   return (
-    <main className="min-h-screen bg-slate-50 p-6 text-slate-900">
-      <h1 className="text-3xl font-bold">Financial Controller</h1>
-    </main>
+    <BrowserRouter>
+      <AuthProvider>
+        <AppLayout>
+          <Routes>
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <DashboardPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          </Routes>
+        </AppLayout>
+      </AuthProvider>
+    </BrowserRouter>
   )
 }
 
