@@ -1,0 +1,2 @@
+import { useMovementFilter } from '../lib/movement-filter'
+export function MovementFilter() { const { filter, setFilter } = useMovementFilter(); return <div aria-label="Filtro de movimentações" className="movement-filter">{([['both','Todas'],['income','Receitas'],['expense','Despesas']] as const).map(([value,label]) => <button aria-pressed={filter === value} key={value} onClick={() => setFilter(value)} type="button">{label}</button>)}</div> }
