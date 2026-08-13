@@ -8,4 +8,5 @@ public interface CategoryRuleRepository extends JpaRepository<CategoryRule, Long
     Optional<CategoryRule> findByUserIdAndNormalizedDescription(Long userId, String normalizedDescription);
     Optional<CategoryRule> findByIdAndUserId(Long id, Long userId);
     List<CategoryRule> findByUserIdOrderByIdDesc(Long userId);
+    boolean existsByCategoryId(Long categoryId);
 }

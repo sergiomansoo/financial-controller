@@ -42,6 +42,12 @@ public class CategoryRuleService {
         return response(rule);
     }
 
+    @Transactional
+    public void delete(Long userId, Long ruleId) {
+        CategoryRule rule = rules.findByIdAndUserId(ruleId, userId).orElseThrow(CategoryRuleNotFoundException::new);
+        rules.delete(rule);
+    }
+
     private CategoryRuleResponse response(CategoryRule rule) {
         Category category = rule.getCategory();
         return new CategoryRuleResponse(rule.getId(), rule.getNormalizedDescription(),

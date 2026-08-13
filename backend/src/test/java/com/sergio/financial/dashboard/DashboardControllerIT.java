@@ -48,8 +48,11 @@ class DashboardControllerIT {
                 .andExpect(jsonPath("$.exceeded").value(false));
 
         mockMvc.perform(get("/api/v1/budgets").param("month", "2026-07").header("Authorization", "Bearer " + token))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$[0].spent").value(10));
+                .andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(5))
+                .andExpect(jsonPath("$[0].spent").value(10))
+                .andExpect(jsonPath("$[0].limit").value(10))
+                .andExpect(jsonPath("$[1].spent").value(0))
+                .andExpect(jsonPath("$[1].limit").value(0));
     }
 
     @Test

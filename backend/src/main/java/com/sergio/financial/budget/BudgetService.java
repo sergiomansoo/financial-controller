@@ -49,8 +49,10 @@ public class BudgetService {
 
     @Transactional(readOnly = true)
     public List<BudgetResponse> list(Long userId, YearMonth month, Map<Long, BigDecimal> expensesByCategory) {
-        return budgets.findByUserIdAndMonth(userId, month.atDay(1)).stream()
-                .map(budget -> response(budget, expensesByCategory))
+        Map<Long, Budget> budgetsByCategory = budgets.findByUserIdAndMonth(userId, month.atDay(1)).stream()
+                .collect(Collectors.toMap(budget -> budget.getCategory().getId(), budget -> budget));
+        return categories.findAccessibleByUserId(userId).stream()
+                .map(category -> response(category, budgetsByCategory.get(category.getId()), expensesByCategory))
                 .toList();
     }
 
@@ -65,8 +67,12 @@ public class BudgetService {
     }
 
     private BudgetResponse response(Budget budget, Map<Long, BigDecimal> expensesByCategory) {
-        BigDecimal spent = expensesByCategory.getOrDefault(budget.getCategory().getId(), BigDecimal.ZERO);
-        return new BudgetResponse(budget.getCategory().getId(), budget.getCategory().getName(), spent,
-                budget.getLimit(), spent.compareTo(budget.getLimit()) > 0);
+        return response(budget.getCategory(), budget, expensesByCategory);
+    }
+
+    private BudgetResponse response(Category category, Budget budget, Map<Long, BigDecimal> expensesByCategory) {
+        BigDecimal spent = expensesByCategory.getOrDefault(category.getId(), BigDecimal.ZERO);
+        BigDecimal limit = budget == null ? BigDecimal.ZERO : budget.getLimit();
+        return new BudgetResponse(category.getId(), category.getName(), spent, limit, spent.compareTo(limit) > 0);
     }
 }

@@ -11,4 +11,5 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
 
     @Query("select category from Category category where category.id = :categoryId and (category.systemCategory = true or category.user.id = :userId)")
     Optional<Category> findAccessibleByIdAndUserId(Long categoryId, Long userId);
+
 }

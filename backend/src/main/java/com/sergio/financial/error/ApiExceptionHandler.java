@@ -2,7 +2,11 @@ package com.sergio.financial.error;
 
 import com.sergio.financial.auth.EmailAlreadyExistsException;
 import com.sergio.financial.auth.InvalidCredentialsException;
+import com.sergio.financial.category.CategoryInUseException;
+import com.sergio.financial.category.CategoryNotDeletableException;
+import com.sergio.financial.category.CategoryNotFoundException;
 import com.sergio.financial.importer.UnsupportedStatementFormatException;
+import com.sergio.financial.rule.CategoryRuleNotFoundException;
 import com.sergio.financial.transaction.TransactionNotFoundException;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -66,6 +70,26 @@ public class ApiExceptionHandler {
     @ExceptionHandler(TransactionNotFoundException.class)
     ResponseEntity<ErrorResponse> transactionNotFound(TransactionNotFoundException exception) {
         return error(HttpStatus.NOT_FOUND, "TRANSACTION_NOT_FOUND", "Transaction was not found.");
+    }
+
+    @ExceptionHandler(CategoryNotFoundException.class)
+    ResponseEntity<ErrorResponse> categoryNotFound(CategoryNotFoundException exception) {
+        return error(HttpStatus.NOT_FOUND, "CATEGORY_NOT_FOUND", "Category was not found.");
+    }
+
+    @ExceptionHandler(CategoryRuleNotFoundException.class)
+    ResponseEntity<ErrorResponse> categoryRuleNotFound(CategoryRuleNotFoundException exception) {
+        return error(HttpStatus.NOT_FOUND, "CATEGORY_RULE_NOT_FOUND", "Category rule was not found.");
+    }
+
+    @ExceptionHandler(CategoryNotDeletableException.class)
+    ResponseEntity<ErrorResponse> categoryNotDeletable(CategoryNotDeletableException exception) {
+        return error(HttpStatus.CONFLICT, "CATEGORY_NOT_DELETABLE", "System categories cannot be deleted.");
+    }
+
+    @ExceptionHandler(CategoryInUseException.class)
+    ResponseEntity<ErrorResponse> categoryInUse(CategoryInUseException exception) {
+        return error(HttpStatus.CONFLICT, "CATEGORY_IN_USE", "Categories in use cannot be deleted.");
     }
 
     private ResponseEntity<ErrorResponse> error(HttpStatus status, String code, String message) {

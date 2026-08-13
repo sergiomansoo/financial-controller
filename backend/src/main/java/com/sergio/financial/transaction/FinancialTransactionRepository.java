@@ -17,6 +17,8 @@ public interface FinancialTransactionRepository extends JpaRepository<FinancialT
 
     boolean existsByUserIdAndDuplicateFingerprint(Long userId, String duplicateFingerprint);
 
+    boolean existsByCategoryId(Long categoryId);
+
     @Query("""
             select transaction from FinancialTransaction transaction
             where transaction.user.id = :userId
