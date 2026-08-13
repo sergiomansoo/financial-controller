@@ -94,5 +94,5 @@ export function updateTransactionCategory(
 }
 
 export function getDashboard(month: string) { return request<DashboardData>(`/dashboard?month=${encodeURIComponent(month)}`) }
-export function updateBudget(categoryId: string | number, month: string, limit: number) { return request<Budget>(`/budgets/${categoryId}?month=${encodeURIComponent(month)}`, { method: 'PUT', body: JSON.stringify({ limit }) }) }
+export function updateBudget(categoryId: string | number, month: string, limit: number): Promise<Budget> { return request<Budget>(`/budgets/${categoryId}?month=${encodeURIComponent(month)}`, { method: 'PUT', body: JSON.stringify({ limit }) }) }
 export function createTransaction(transaction: ManualTransactionInput) { return request<Transaction>('/transactions', { method: 'POST', body: JSON.stringify(transaction) }) }

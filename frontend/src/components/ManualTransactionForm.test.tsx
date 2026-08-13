@@ -46,4 +46,21 @@ describe('ManualTransactionForm', () => {
       })
     })
   })
+
+  it('offers and submits an investment transaction', async () => {
+    const fetchMock = vi.fn<(input: RequestInfo | URL, init?: RequestInit) => Promise<Response>>(async (input) => new Response(JSON.stringify(String(input).endsWith('/categories') ? [{ id: 'investments', name: 'Investments' }] : { id: 'transaction-2' }), { status: String(input).endsWith('/categories') ? 200 : 201, headers: { 'Content-Type': 'application/json' } }))
+    vi.stubGlobal('fetch', fetchMock)
+    render(<ManualTransactionForm onCreated={() => undefined} />)
+    await screen.findByRole('option', { name: 'Investments' })
+    fireEvent.change(screen.getByLabelText(/date/i), { target: { value: '2026-08-12' } })
+    fireEvent.change(screen.getByLabelText(/description/i), { target: { value: 'Synthetic investment' } })
+    fireEvent.change(screen.getByLabelText(/amount/i), { target: { value: '25' } })
+    fireEvent.change(screen.getByLabelText(/category/i), { target: { value: 'investments' } })
+    fireEvent.change(screen.getByLabelText(/type/i), { target: { value: 'INVESTMENT' } })
+    fireEvent.click(screen.getByRole('button', { name: /add transaction/i }))
+    await waitFor(() => {
+      const request = fetchMock.mock.calls.find(([url]) => String(url).endsWith('/transactions'))
+      expect(JSON.parse(String((request?.[1] as RequestInit).body))).toMatchObject({ type: 'INVESTMENT', categoryId: 'investments' })
+    })
+  })
 })
