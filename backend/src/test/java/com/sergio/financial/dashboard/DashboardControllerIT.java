@@ -154,6 +154,30 @@ class DashboardControllerIT {
                 .andExpect(jsonPath("$.monthlyEvolution[5].expense").value(30));
     }
 
+    @Test
+    void usesAbsoluteImportedDebitsForLargestExpenseAndBudgets() throws Exception {
+        String token = register("Imported debits", "imported.debits@example.test");
+        long foodCategoryId = categoryId(token, "Alimenta\u00e7\u00e3o");
+        long outrosCategoryId = categoryId(token, "Outros");
+
+        createTransaction(token, foodCategoryId, "2026-07-15", "Bakery debit", "-10.00", "EXPENSE");
+        createTransaction(token, outrosCategoryId, "2026-07-16", "Fictional service debit", "-100.00", "EXPENSE");
+
+        mockMvc.perform(get("/api/v1/dashboard").param("month", "2026-07").param("filter", "expense")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totals.expense").value(110))
+                .andExpect(jsonPath("$.totals.largestExpenseCategory").value("Outros"))
+                .andExpect(jsonPath("$.totals.largestExpenseAmount").value(100));
+
+        mockMvc.perform(put("/api/v1/budgets/{id}", outrosCategoryId).param("month", "2026-07")
+                        .header("Authorization", "Bearer " + token).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"limit\":200.00}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.spent").value(100))
+                .andExpect(jsonPath("$.exceeded").value(false));
+    }
+
     private void createTransaction(String token, long categoryId, String date, String description, String amount, String type) throws Exception {
         mockMvc.perform(post("/api/v1/transactions").header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -186,4 +210,5 @@ class DashboardControllerIT {
         assertThat(token).isNotBlank();
         return token;
     }
+
 }

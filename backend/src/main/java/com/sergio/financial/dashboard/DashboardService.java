@@ -49,7 +49,7 @@ public class DashboardService {
                 income = income.add(transaction.getAmount());
             }
             if (transaction.getType() == TransactionType.EXPENSE && filter.includes(TransactionType.EXPENSE)) {
-                expense = expense.add(transaction.getAmount());
+                expense = expense.add(transaction.getAmount().abs());
             }
         }
         CategoryExpense largest = filter.includes(TransactionType.EXPENSE)
@@ -74,7 +74,8 @@ public class DashboardService {
             if (transaction.getType() == TransactionType.INCOME && filter.includes(TransactionType.INCOME)) {
                 totalsByMonth.put(transactionMonth, new Totals(current.income().add(transaction.getAmount()), current.expense()));
             } else if (transaction.getType() == TransactionType.EXPENSE && filter.includes(TransactionType.EXPENSE)) {
-                totalsByMonth.put(transactionMonth, new Totals(current.income(), current.expense().add(transaction.getAmount())));
+                totalsByMonth.put(transactionMonth,
+                        new Totals(current.income(), current.expense().add(transaction.getAmount().abs())));
             }
         }
 

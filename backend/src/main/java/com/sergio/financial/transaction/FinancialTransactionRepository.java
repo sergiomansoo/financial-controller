@@ -36,19 +36,22 @@ public interface FinancialTransactionRepository extends JpaRepository<FinancialT
 
     @Query("""
             select new com.sergio.financial.transaction.CategoryExpense(
-                transaction.category.id, transaction.category.name, sum(transaction.amount))
+                transaction.category.id, transaction.category.name,
+                sum(case when transaction.type = com.sergio.financial.transaction.TransactionType.EXPENSE
+                    then abs(transaction.amount) else transaction.amount end))
             from FinancialTransaction transaction
             where transaction.user.id = :userId
               and transaction.date >= :from and transaction.date < :until
               and (:type is null or transaction.type = :type)
             group by transaction.category.id, transaction.category.name
-            order by sum(transaction.amount) desc, transaction.category.name
+            order by sum(case when transaction.type = com.sergio.financial.transaction.TransactionType.EXPENSE
+                then abs(transaction.amount) else transaction.amount end) desc, transaction.category.name
             """)
     List<CategoryExpense> sumByCategory(Long userId, LocalDate from, LocalDate until, TransactionType type);
 
     @Query("""
             select new com.sergio.financial.transaction.CategoryExpense(
-                transaction.category.id, transaction.category.name, sum(transaction.amount))
+                transaction.category.id, transaction.category.name, sum(abs(transaction.amount)))
             from FinancialTransaction transaction
             where transaction.user.id = :userId
               and transaction.date >= :from
