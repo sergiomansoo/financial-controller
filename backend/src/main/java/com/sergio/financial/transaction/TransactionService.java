@@ -10,6 +10,8 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.List;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -46,6 +48,16 @@ public class TransactionService {
                 .stream().map(this::response).toList();
     }
 
+    @Transactional(readOnly = true)
+    public TransactionPageResponse page(Long userId, YearMonth month, TransactionType type, Long categoryId,
+                                        LocalDate fromDate, LocalDate toDate, int page, int size) {
+        int safePage = Math.max(0, page);
+        int safeSize = Math.min(100, Math.max(1, size));
+        Pageable pageable = PageRequest.of(safePage, safeSize);
+        return TransactionPageResponse.from(transactions.search(userId, month.atDay(1), month.plusMonths(1).atDay(1),
+                type, categoryId, fromDate, toDate, pageable).map(this::response));
+    }
+
     @Transactional
     public TransactionResponse updateCategory(Long userId, Long transactionId, CategoryUpdateRequest request) {
         FinancialTransaction transaction = transactions.findByIdAndUserId(transactionId, userId)
@@ -69,6 +81,15 @@ public class TransactionService {
                 user, category, date, history, description, normalizedDescription, amount, typeFor(history),
                 fingerprint, duplicate));
         return new ImportedTransaction(response(transaction), duplicate);
+    }
+
+    @Transactional(readOnly = true)
+    public boolean isDuplicate(Long userId, String fingerprint) {
+        return transactions.existsByUserIdAndDuplicateFingerprint(userId, fingerprint);
+    }
+
+    public TransactionType typeForPreview(String history) {
+        return typeFor(history);
     }
 
     private User user(Long userId) {

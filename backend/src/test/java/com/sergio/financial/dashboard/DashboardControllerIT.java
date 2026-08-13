@@ -96,6 +96,22 @@ class DashboardControllerIT {
                 .andExpect(jsonPath("$.fieldErrors.month").exists());
     }
 
+    @Test
+    void filtersCategoryRankingAndReturnsDashboardKpis() throws Exception {
+        String token = register("Filter dashboard", "filter.dashboard@example.test");
+        long categoryId = categoryId(token, "Alimenta\u00e7\u00e3o");
+        createTransaction(token, categoryId, "2026-07-20", "Salary", "100.00", "INCOME");
+        createTransaction(token, categoryId, "2026-07-21", "Lunch", "30.00", "EXPENSE");
+
+        mockMvc.perform(get("/api/v1/dashboard").param("month", "2026-07").param("filter", "income")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.byCategory[0].spent").value(100))
+                .andExpect(jsonPath("$.totals.income").value(100))
+                .andExpect(jsonPath("$.totals.expense").value(30))
+                .andExpect(jsonPath("$.totals.balance").value(70));
+    }
+
     private void createTransaction(String token, long categoryId, String date, String description, String amount, String type) throws Exception {
         mockMvc.perform(post("/api/v1/transactions").header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)

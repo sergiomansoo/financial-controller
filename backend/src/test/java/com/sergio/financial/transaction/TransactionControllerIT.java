@@ -93,6 +93,36 @@ class TransactionControllerIT {
                 .andExpect(jsonPath("$.fieldErrors.amount").isNotEmpty());
     }
 
+    @Test
+    void returnsAPagedTransactionListFilteredByType() throws Exception {
+        String token = register("Filter User", "filter.user@example.test");
+        long categoryId = firstCategoryId(token);
+        createTransaction(token, categoryId, "2026-07-20", "Salary", "100.00", "INCOME");
+        createTransaction(token, categoryId, "2026-07-21", "Coffee", "8.00", "EXPENSE");
+
+        mockMvc.perform(get("/api/v1/transactions")
+                        .param("month", "2026-07")
+                        .param("type", "EXPENSE")
+                        .param("page", "0")
+                        .param("size", "1")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.length()").value(1))
+                .andExpect(jsonPath("$.content[0].description").value("Coffee"))
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.totalPages").value(1));
+    }
+
+    private void createTransaction(String token, long categoryId, String date, String description, String amount, String type)
+            throws Exception {
+        mockMvc.perform(post("/api/v1/transactions")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"date\":\"%s\",\"description\":\"%s\",\"amount\":%s,\"categoryId\":%d,\"type\":\"%s\"}"
+                                .formatted(date, description, amount, categoryId, type)))
+                .andExpect(status().isCreated());
+    }
+
     private long firstCategoryId(String token) throws Exception {
         MvcResult result = mockMvc.perform(get("/api/v1/categories").header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())

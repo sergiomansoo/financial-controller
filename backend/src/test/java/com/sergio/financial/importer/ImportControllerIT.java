@@ -98,6 +98,25 @@ class ImportControllerIT {
                 .andExpect(jsonPath("$.transactions[0].category.name").value("Transporte"));
     }
 
+    @Test
+    void previewsStatementWithoutPersistingTransactions() throws Exception {
+        String token = register("Preview User", "preview.user@example.test");
+
+        mockMvc.perform(multipart("/api/v1/imports/preview")
+                        .file(new MockMultipartFile("file", "statement.csv", "text/csv", statement("""
+                                15/07/2026;Compra;Padaria Exemplo;-18,50;981,50
+                                """).getBytes(StandardCharsets.UTF_8)))
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.previewCount").value(1))
+                .andExpect(jsonPath("$.rows[0].description").value("Padaria Exemplo"));
+
+        mockMvc.perform(get("/api/v1/transactions").param("month", "2026-07")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
+    }
+
     private JsonNode importAndRead(String token, String csv) throws Exception {
         MvcResult result = mockMvc.perform(importStatement(token, csv)).andExpect(status().isOk()).andReturn();
         return objectMapper.readTree(result.getResponse().getContentAsString());

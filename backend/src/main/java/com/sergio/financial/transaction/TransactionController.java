@@ -2,6 +2,7 @@ package com.sergio.financial.transaction;
 
 import jakarta.validation.Valid;
 import java.time.YearMonth;
+import java.time.LocalDate;
 import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
@@ -25,8 +26,19 @@ public class TransactionController {
     }
 
     @GetMapping
-    public List<TransactionResponse> list(@RequestParam YearMonth month, Authentication authentication) {
-        return transactions.list(userId(authentication), month);
+    public Object list(@RequestParam YearMonth month,
+                       @RequestParam(required = false) TransactionType type,
+                       @RequestParam(required = false) Long categoryId,
+                       @RequestParam(required = false) LocalDate from,
+                       @RequestParam(required = false) LocalDate to,
+                       @RequestParam(required = false) Integer page,
+                       @RequestParam(required = false) Integer size,
+                       Authentication authentication) {
+        if (page == null && size == null && type == null && categoryId == null && from == null && to == null) {
+            return transactions.list(userId(authentication), month);
+        }
+        return transactions.page(userId(authentication), month, type, categoryId, from, to,
+                page == null ? 0 : page, size == null ? 10 : size);
     }
 
     @PostMapping

@@ -24,17 +24,32 @@ public class DashboardService {
         this.budgets = budgets;
     }
 
-    public DashboardResponse dashboard(Long userId, YearMonth month) {
+    public DashboardResponse dashboard(Long userId, YearMonth month, DashboardFilter filter) {
         List<CategoryExpense> expenses = budgets.categoryExpenses(userId, month);
         Map<Long, BigDecimal> expensesByCategory = expenses.stream()
                 .collect(Collectors.toMap(CategoryExpense::categoryId, CategoryExpense::spent));
 
         return new DashboardResponse(
-                expenses.stream()
+                totals(userId, month, expenses),
+                transactions.sumByCategory(userId, month.atDay(1), month.plusMonths(1).atDay(1), filter.transactionType()).stream()
                         .map(expense -> new CategorySpend(expense.categoryId(), expense.categoryName(), expense.spent()))
                         .toList(),
                 monthlyEvolution(userId, month),
                 budgets.list(userId, month, expensesByCategory));
+    }
+
+    private TotalsResponse totals(Long userId, YearMonth month, List<CategoryExpense> expenses) {
+        BigDecimal income = BigDecimal.ZERO;
+        BigDecimal expense = BigDecimal.ZERO;
+        for (FinancialTransaction transaction : transactions
+                .findByUserIdAndDateGreaterThanEqualAndDateLessThanOrderByDateDescIdDesc(
+                        userId, month.atDay(1), month.plusMonths(1).atDay(1))) {
+            if (transaction.getType() == TransactionType.INCOME) income = income.add(transaction.getAmount());
+            if (transaction.getType() == TransactionType.EXPENSE) expense = expense.add(transaction.getAmount());
+        }
+        CategoryExpense largest = expenses.stream().max(java.util.Comparator.comparing(CategoryExpense::spent)).orElse(null);
+        return new TotalsResponse(income.subtract(expense), income, expense,
+                largest == null ? null : largest.categoryName(), largest == null ? BigDecimal.ZERO : largest.spent());
     }
 
     private List<MonthlyEvolution> monthlyEvolution(Long userId, YearMonth month) {
@@ -70,7 +85,11 @@ public class DashboardService {
     private record Totals(BigDecimal income, BigDecimal expense) {
     }
 
-    public record DashboardResponse(List<CategorySpend> byCategory, List<MonthlyEvolution> monthlyEvolution,
+    public record TotalsResponse(BigDecimal balance, BigDecimal income, BigDecimal expense, String largestExpenseCategory,
+                                 BigDecimal largestExpenseAmount) {
+    }
+
+    public record DashboardResponse(TotalsResponse totals, List<CategorySpend> byCategory, List<MonthlyEvolution> monthlyEvolution,
                                     List<BudgetResponse> budgets) {
     }
 }

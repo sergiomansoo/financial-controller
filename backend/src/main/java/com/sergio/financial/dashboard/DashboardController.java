@@ -17,7 +17,9 @@ public class DashboardController {
     }
 
     @GetMapping
-    public DashboardService.DashboardResponse get(@RequestParam YearMonth month, Authentication authentication) {
-        return service.dashboard(Long.valueOf(authentication.getName()), month);
+    public DashboardService.DashboardResponse get(@RequestParam YearMonth month,
+                                                   @RequestParam(required = false) String filter,
+                                                   Authentication authentication) {
+        return service.dashboard(Long.valueOf(authentication.getName()), month, DashboardFilter.from(filter));
     }
 }

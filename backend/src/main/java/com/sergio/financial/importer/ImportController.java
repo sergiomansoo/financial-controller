@@ -36,4 +36,18 @@ public class ImportController {
             throw new UnsupportedStatementFormatException();
         }
     }
+
+    @PostMapping("/preview")
+    public ImportPreviewResponse previewStatement(@RequestParam("file") MultipartFile file, Authentication authentication) {
+        Long userId = Long.valueOf(authentication.getName());
+        try {
+            List<ImportPreviewResponse.PreviewRow> rows = parser.parse(file.getInputStream()).stream()
+                    .map(row -> new ImportPreviewResponse.PreviewRow(row.date(), row.history(), row.description(), row.amount(),
+                            transactions.typeForPreview(row.history()), transactions.isDuplicate(userId, row.duplicateFingerprint())))
+                    .toList();
+            return new ImportPreviewResponse(rows.size(), (int) rows.stream().filter(ImportPreviewResponse.PreviewRow::duplicate).count(), rows);
+        } catch (IOException exception) {
+            throw new UnsupportedStatementFormatException();
+        }
+    }
 }
