@@ -2,6 +2,11 @@ package com.sergio.financial.auth;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
+import java.nio.charset.StandardCharsets;
+import java.time.Instant;
+import java.util.Date;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -72,6 +77,71 @@ class AuthControllerIT {
     }
 
     @Test
+    void logsInRegisteredUser() throws Exception {
+        register("Dorothy Vaughan", "dorothy@example.test", "FictionalPassword1!");
+
+        mockMvc.perform(post("/api/v1/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"email":"dorothy@example.test","password":"FictionalPassword1!"}
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.accessToken").isNotEmpty())
+                .andExpect(jsonPath("$.tokenType").value("Bearer"))
+                .andExpect(jsonPath("$.user.email").value("dorothy@example.test"));
+    }
+
+    @Test
+    void rejectsTooLongRegistrationEmailWithFieldErrors() throws Exception {
+        String email = "a".repeat(244) + "@example.test";
+
+        mockMvc.perform(post("/api/v1/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"name":"Mary Jackson","email":"%s","password":"FictionalPassword1!"}
+                                """.formatted(email)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
+                .andExpect(jsonPath("$.fieldErrors.email").isNotEmpty());
+    }
+
+    @Test
+    void rejectsMalformedJsonWithValidationErrorBody() throws Exception {
+        mockMvc.perform(post("/api/v1/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"Malformed\""))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
+                .andExpect(jsonPath("$.message").value("Validation failed."))
+                .andExpect(jsonPath("$.fieldErrors").isMap());
+    }
+
+    @Test
+    void rejectsInvalidBearerToken() throws Exception {
+        mockMvc.perform(get("/api/v1/categories").header("Authorization", "Bearer not-a-token"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.status").value(401))
+                .andExpect(jsonPath("$.code").value("INVALID_TOKEN"));
+    }
+
+    @Test
+    void rejectsExpiredBearerToken() throws Exception {
+        String expiredToken = Jwts.builder()
+                .subject("999")
+                .issuedAt(Date.from(Instant.now().minusSeconds(120)))
+                .expiration(Date.from(Instant.now().minusSeconds(60)))
+                .signWith(Keys.hmacShaKeyFor(TEST_JWT_SECRET.getBytes(StandardCharsets.UTF_8)))
+                .compact();
+
+        mockMvc.perform(get("/api/v1/categories").header("Authorization", "Bearer " + expiredToken))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.status").value(401))
+                .andExpect(jsonPath("$.code").value("INVALID_TOKEN"));
+    }
+
+    @Test
     void rejectsAnonymousCategoryRequestsWithUnauthorizedError() throws Exception {
         mockMvc.perform(get("/api/v1/categories"))
                 .andExpect(status().isUnauthorized())
@@ -98,4 +168,6 @@ class AuthControllerIT {
         assertThat(token).isNotBlank();
         return token;
     }
+
+    private static final String TEST_JWT_SECRET = "test-only-jwt-secret-with-at-least-thirty-two-characters";
 }

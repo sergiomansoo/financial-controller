@@ -4,8 +4,10 @@ import com.sergio.financial.auth.EmailAlreadyExistsException;
 import com.sergio.financial.auth.InvalidCredentialsException;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -22,12 +24,22 @@ public class ApiExceptionHandler {
         return error(HttpStatus.UNAUTHORIZED, "INVALID_CREDENTIALS", exception.getMessage());
     }
 
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    ResponseEntity<ErrorResponse> duplicateEmail(DataIntegrityViolationException exception) {
+        return error(HttpStatus.CONFLICT, "EMAIL_ALREADY_EXISTS", "An account with this email already exists.");
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     ResponseEntity<ErrorResponse> validation(MethodArgumentNotValidException exception) {
         Map<String, String> fieldErrors = new LinkedHashMap<>();
         exception.getBindingResult().getFieldErrors()
                 .forEach(error -> fieldErrors.put(error.getField(), error.getDefaultMessage()));
         return ResponseEntity.badRequest().body(new ErrorResponse(400, "VALIDATION_ERROR", "Validation failed.", fieldErrors));
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    ResponseEntity<ErrorResponse> malformedJson(HttpMessageNotReadableException exception) {
+        return ResponseEntity.badRequest().body(new ErrorResponse(400, "VALIDATION_ERROR", "Validation failed.", Map.of()));
     }
 
     private ResponseEntity<ErrorResponse> error(HttpStatus status, String code, String message) {

@@ -8,3 +8,7 @@ spring:
       ddl-auto: validate
   flyway:
     enabled: true
+
+app:
+  jwt:
+    secret: test-only-jwt-secret-with-at-least-thirty-two-characters
