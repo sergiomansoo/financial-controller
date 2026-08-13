@@ -27,7 +27,14 @@ public class Category {
     protected Category() {
     }
 
+    public Category(User user, String name) {
+        this.user = user;
+        this.name = name;
+        this.systemCategory = false;
+    }
+
     public Long getId() { return id; }
     public String getName() { return name; }
     public boolean isSystemCategory() { return systemCategory; }
+    public User getUser() { return user; }
 }

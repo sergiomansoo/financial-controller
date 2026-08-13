@@ -42,5 +42,7 @@ public class CategoryRule {
         this.category = category;
     }
 
+    public Long getId() { return id; }
     public Category getCategory() { return category; }
+    public String getNormalizedDescription() { return normalizedDescription; }
 }
