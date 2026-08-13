@@ -54,12 +54,13 @@ describe('TransactionTable', () => {
     expect(await screen.findByText(/review duplicate/i)).toBeInTheDocument()
   })
 
-  it('sends the transaction category id with learn enabled', async () => {
+  it('sends the newly selected category id with learn enabled', async () => {
     const fetchMock = mockApi()
 
     render(<TransactionTable month="2026-08" />)
 
-    await screen.findByLabelText('Category for Pix Store')
+    const categoryEditor = await screen.findByLabelText('Category for Pix Store')
+    fireEvent.change(categoryEditor, { target: { value: 'food' } })
     fireEvent.click(screen.getByRole('button', { name: 'Learn category for Pix Store' }))
 
     await waitFor(() => {
@@ -67,7 +68,7 @@ describe('TransactionTable', () => {
         'http://localhost:8080/api/v1/transactions/transaction-1/category',
         expect.objectContaining({
           method: 'PATCH',
-          body: JSON.stringify({ categoryId: 'other', learn: true }),
+          body: JSON.stringify({ categoryId: 'food', learn: true }),
         }),
       )
     })
