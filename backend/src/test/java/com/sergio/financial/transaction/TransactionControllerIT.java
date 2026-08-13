@@ -76,6 +76,23 @@ class TransactionControllerIT {
                 .andExpect(jsonPath("$.status").value(404));
     }
 
+    @Test
+    void rejectsManualAmountWithMoreThanTwoDecimalPlaces() throws Exception {
+        String token = register("Scale User", "scale.user@example.test");
+        long categoryId = firstCategoryId(token);
+
+        mockMvc.perform(post("/api/v1/transactions")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"date":"2026-07-22","description":"Fictional precision test","amount":19.999,"categoryId":%d,"type":"EXPENSE"}
+                                """.formatted(categoryId)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
+                .andExpect(jsonPath("$.fieldErrors.amount").isNotEmpty());
+    }
+
     private long firstCategoryId(String token) throws Exception {
         MvcResult result = mockMvc.perform(get("/api/v1/categories").header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())

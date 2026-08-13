@@ -62,8 +62,7 @@ public class TransactionService {
     public ImportedTransaction saveImported(Long userId, LocalDate date, String history, String description,
                                             BigDecimal amount, String fingerprint) {
         User user = user(userId);
-        boolean duplicate = transactions.existsByUserIdAndDateAndHistoryAndDescriptionAndAmount(
-                userId, date, history, description, amount);
+        boolean duplicate = transactions.existsByUserIdAndDuplicateFingerprint(userId, fingerprint);
         String normalizedDescription = categorization.normalize(description == null ? history : description);
         Category category = categorization.categorize(user, normalizedDescription);
         FinancialTransaction transaction = transactions.save(new FinancialTransaction(

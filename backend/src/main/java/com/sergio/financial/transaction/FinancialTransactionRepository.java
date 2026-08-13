@@ -1,6 +1,5 @@
 package com.sergio.financial.transaction;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -12,6 +11,5 @@ public interface FinancialTransactionRepository extends JpaRepository<FinancialT
     List<FinancialTransaction> findByUserIdAndDateGreaterThanEqualAndDateLessThanOrderByDateDescIdDesc(
             Long userId, LocalDate from, LocalDate until);
 
-    boolean existsByUserIdAndDateAndHistoryAndDescriptionAndAmount(
-            Long userId, LocalDate date, String history, String description, BigDecimal amount);
+    boolean existsByUserIdAndDuplicateFingerprint(Long userId, String duplicateFingerprint);
 }

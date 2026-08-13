@@ -53,6 +53,12 @@ class ImportControllerIT {
                 .andExpect(jsonPath("$.importedCount").value(1))
                 .andExpect(jsonPath("$.duplicateCount").value(1))
                 .andExpect(jsonPath("$.transactions[0].needsReview").value(true));
+
+        mockMvc.perform(get("/api/v1/transactions").param("month", "2026-07")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].needsReview").value(true));
     }
 
     @Test
