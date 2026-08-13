@@ -21,10 +21,10 @@ describe('StatementUpload', () => {
     vi.stubGlobal('fetch', fetchMock)
 
     render(<StatementUpload />)
-    fireEvent.change(screen.getByLabelText(/statement file/i), {
+    fireEvent.change(screen.getByLabelText(/arquivo csv/i), {
       target: { files: [new File(['content'], 'statement.csv', { type: 'text/csv' })] },
     })
-    fireEvent.submit(screen.getByRole('button', { name: /upload statement/i }).closest('form')!)
+    fireEvent.submit(screen.getByRole('button', { name: /ver prévia/i }).closest('form')!)
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
       'Formato de extrato não suportado. Envie um CSV Banco Inter em UTF-8.',

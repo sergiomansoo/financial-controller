@@ -1,67 +1,11 @@
 import { type FormEvent, useState } from 'react'
+import { ApiError, previewStatement, uploadStatement } from '../lib/api'
+import type { ImportPreview, ImportResponse } from '../types/api'
 
-import { ApiError, uploadStatement } from '../lib/api'
-import type { ImportResponse } from '../types/api'
-
-interface StatementUploadProps {
-  onImported?: (result: ImportResponse) => void
-}
-
-export function StatementUpload({ onImported }: StatementUploadProps) {
-  const [file, setFile] = useState<File | null>(null)
-  const [result, setResult] = useState<ImportResponse | null>(null)
-  const [error, setError] = useState<string | null>(null)
-  const [isSubmitting, setIsSubmitting] = useState(false)
-
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    if (!file) return
-
-    setError(null)
-    setResult(null)
-    setIsSubmitting(true)
-
-    try {
-      const imported = await uploadStatement(file)
-      setResult(imported)
-      onImported?.(imported)
-    } catch (caughtError) {
-      setError(
-        caughtError instanceof ApiError
-          ? caughtError.message
-          : 'Unable to upload the statement. Please try again.',
-      )
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
-
-  return (
-    <section aria-labelledby="statement-upload-heading" className="mt-6 rounded border bg-white p-4">
-      <h2 id="statement-upload-heading" className="text-xl font-semibold">Import statement</h2>
-      <form className="mt-4 space-y-3" onSubmit={handleSubmit}>
-        <div>
-          <label htmlFor="statement-file">Statement file</label>
-          <input
-            accept=".csv,text/csv"
-            className="ml-2"
-            id="statement-file"
-            name="file"
-            onChange={(event) => setFile(event.target.files?.[0] ?? null)}
-            required
-            type="file"
-          />
-        </div>
-        {error && <p role="alert">{error}</p>}
-        {result && (
-          <p role="status">
-            Imported {result.importedCount} transactions; {result.duplicateCount} duplicates need review.
-          </p>
-        )}
-        <button className="rounded bg-slate-900 px-4 py-2 text-white" disabled={isSubmitting} type="submit">
-          {isSubmitting ? 'Uploading…' : 'Upload statement'}
-        </button>
-      </form>
-    </section>
-  )
+export function StatementUpload({ onImported }: { onImported?: (result: ImportResponse) => void }) {
+  const [file, setFile] = useState<File | null>(null), [preview, setPreview] = useState<ImportPreview | null>(null), [error, setError] = useState<string | null>(null), [busy, setBusy] = useState(false), [result, setResult] = useState<ImportResponse | null>(null)
+  const message = (caught: unknown) => caught instanceof ApiError ? caught.message : 'Não foi possível processar o arquivo. Tente novamente.'
+  async function review(event: FormEvent<HTMLFormElement>) { event.preventDefault(); if (!file) return; setBusy(true); setError(null); setResult(null); try { setPreview(await previewStatement(file)) } catch (caught) { setError(message(caught)) } finally { setBusy(false) } }
+  async function confirm() { if (!file) return; setBusy(true); setError(null); try { const imported = await uploadStatement(file); setResult(imported); setPreview(null); onImported?.(imported) } catch (caught) { setError(message(caught)) } finally { setBusy(false) } }
+  return <section aria-labelledby="statement-upload-heading" className="ledger-panel import-panel"><h2 id="statement-upload-heading">Importar extrato</h2><form onSubmit={review}><label htmlFor="statement-file">Arquivo CSV<input accept=".csv,text/csv" id="statement-file" required type="file" onChange={(event) => { setFile(event.target.files?.[0] ?? null); setPreview(null) }} /></label><button className="ledger-button" disabled={busy || !file} type="submit">{busy ? 'Processando…' : 'Ver prévia'}</button></form>{error && <p role="alert" className="ledger-alert">{error}</p>}{preview && <div className="import-preview"><h3>Prévia: {preview.previewCount} movimentações</h3><p>{preview.duplicateCount} possível(is) duplicata(s) serão sinalizada(s).</p><table><caption className="sr-only">Prévia do extrato</caption><thead><tr><th>Data</th><th>Descrição</th><th>Valor</th><th>Status</th></tr></thead><tbody>{preview.rows.slice(0, 8).map((row, index) => <tr key={`${row.date}-${index}`}><td>{row.date}</td><td>{row.description ?? row.history}</td><td>{row.amount}</td><td>{row.duplicate ? 'Duplicata' : 'Novo'}</td></tr>)}</tbody></table><button className="ledger-button" disabled={busy} type="button" onClick={confirm}>{busy ? 'Importando…' : 'Confirmar importação'}</button></div>}{result && <p role="status">{result.importedCount} movimentações importadas; {result.duplicateCount} duplicatas precisam de revisão.</p>}</section>
 }

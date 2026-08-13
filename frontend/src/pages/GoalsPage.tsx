@@ -1,1 +1,12 @@
-export function GoalsPage() { return <section className="ledger-page"><h1>Metas mensais</h1><p>Acompanhe e ajuste seus limites por categoria.</p></section> }
+import { useEffect, useState } from 'react'
+import { getBudgets, updateBudget } from '../lib/api'
+import type { Budget } from '../types/api'
+const monthNow = () => new Date().toISOString().slice(0, 7)
+const currency = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
+export function GoalsPage() {
+  const [month, setMonth] = useState(monthNow), [budgets, setBudgets] = useState<Budget[] | null>(null), [error, setError] = useState(false)
+  const load = () => { setBudgets(null); setError(false); getBudgets(month).then(setBudgets).catch(() => setError(true)) }
+  useEffect(load, [month])
+  return <section className="ledger-page"><header className="page-title"><div><p>Planejamento</p><h1>Metas mensais</h1></div><label>Mês<input type="month" value={month} onChange={(event) => setMonth(event.target.value)} /></label></header>{error ? <div className="ledger-alert" role="alert">Não foi possível carregar metas.<button onClick={load}>Tentar novamente</button></div> : !budgets ? <p className="ledger-skeleton" role="status">Carregando metas…</p> : budgets.length === 0 ? <p className="ledger-empty">Nenhuma meta configurada para este mês.</p> : <div className="goals-list">{budgets.map((budget) => <BudgetRow budget={budget} month={month} onSaved={load} key={budget.categoryId} />)}</div>}</section>
+}
+function BudgetRow({ budget, month, onSaved }: { budget: Budget; month: string; onSaved: () => void }) { const [limit, setLimit] = useState(String(budget.limit)); const [error, setError] = useState(''); const ratio = Math.min(100, budget.spent / Math.max(budget.limit, 1) * 100); async function save() { const valid = /^\d+(\.\d{1,2})?$/.test(limit) && Number(limit) >= 0; if (!valid) { setError('Informe um limite válido com até duas casas decimais.'); return } setError(''); await updateBudget(budget.categoryId, month, Number(limit)); onSaved() } return <article className={`goal-card ${budget.exceeded ? 'exceeded' : ''}`}><div><h2>{budget.categoryName}</h2><p>{currency.format(budget.spent)} de {currency.format(budget.limit)}</p></div><div className="goal-progress" aria-label={`${budget.categoryName}: ${ratio.toFixed(0)}% do limite`}><i style={{ width: `${ratio}%` }} /></div><label>Limite<input value={limit} inputMode="decimal" onChange={(event) => setLimit(event.target.value)} /></label><button className="ledger-button" onClick={save}>Salvar</button>{error && <p role="alert">{error}</p>}</article> }

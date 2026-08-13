@@ -1,31 +1,16 @@
-import { useState } from 'react'
+import { type ChangeEvent, useEffect, useState } from 'react'
+import { AlertCircle } from 'lucide-react'
+import { getCategories, getTransactionPage } from '../lib/api'
+import { useMovementFilter } from '../lib/movement-filter'
+import type { Category, TransactionPage } from '../types/api'
 
-import { StatementUpload } from '../components/StatementUpload'
-import { TransactionTable } from '../components/TransactionTable'
-
-function currentMonth() {
-  return new Date().toISOString().slice(0, 7)
-}
-
+const currentMonth = () => new Date().toISOString().slice(0, 7)
+const currency = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
 export function TransactionsPage() {
-  const [month, setMonth] = useState(currentMonth)
-  const [refreshKey, setRefreshKey] = useState(0)
-
-  return (
-    <main className="mx-auto max-w-5xl p-6">
-      <h1 className="text-3xl font-bold">Review transactions</h1>
-      <StatementUpload onImported={() => setRefreshKey((current) => current + 1)} />
-      <div className="mt-6">
-        <label htmlFor="transactions-month">Month</label>
-        <input
-          className="ml-2 border p-1"
-          id="transactions-month"
-          onChange={(event) => setMonth(event.target.value)}
-          type="month"
-          value={month}
-        />
-      </div>
-      <TransactionTable key={`${month}-${refreshKey}`} month={month} />
-    </main>
-  )
+  const [month, setMonth] = useState(currentMonth), [categoryId, setCategory] = useState(''), [from, setFrom] = useState(''), [to, setTo] = useState(''), [page, setPage] = useState(0), [data, setData] = useState<TransactionPage | null>(null), [categories, setCategories] = useState<Category[]>([]), [error, setError] = useState(false), [retry, setRetry] = useState(0)
+  const { filter } = useMovementFilter()
+  useEffect(() => { getCategories().then(setCategories).catch(() => setCategories([])) }, [])
+  useEffect(() => { let cancelled = false; setData(null); setError(false); getTransactionPage({ month, page, size: 10, type: filter === 'both' ? undefined : filter === 'income' ? 'INCOME' : 'EXPENSE', categoryId: categoryId || undefined, from: from || undefined, to: to || undefined }).then((result) => { if (!cancelled) setData(result) }).catch(() => { if (!cancelled) setError(true) }); return () => { cancelled = true } }, [month, page, filter, categoryId, from, to, retry])
+  const resetPage = (setter: (value: string) => void) => (event: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => { setter(event.target.value); setPage(0) }
+  return <section className="ledger-page"><header className="page-title"><div><p>Movimentações</p><h1>Transações</h1></div></header><div className="ledger-filters"><label>Mês<input type="month" value={month} onChange={resetPage(setMonth)} /></label><label>Categoria<select value={categoryId} onChange={resetPage(setCategory)}><option value="">Todas</option>{categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}</select></label><label>De<input type="date" value={from} onChange={resetPage(setFrom)} /></label><label>Até<input type="date" value={to} onChange={resetPage(setTo)} /></label></div>{error ? <div className="ledger-alert" role="alert"><AlertCircle size={18} />Não foi possível carregar transações.<button onClick={() => setRetry((value) => value + 1)}>Tentar novamente</button></div> : !data ? <p className="ledger-skeleton" role="status">Carregando transações…</p> : data.content.length === 0 ? <p className="ledger-empty">Nenhuma transação encontrada.</p> : <div className="table-wrap"><table className="transaction-table"><caption className="sr-only">Transações filtradas</caption><thead><tr><th>Data</th><th>Descrição</th><th>Categoria</th><th>Tipo</th><th>Valor</th></tr></thead><tbody>{data.content.map((transaction) => <tr key={transaction.id}><td>{transaction.date}</td><td>{transaction.description ?? transaction.history}{transaction.needsReview && <span className="review-badge">Revisar</span>}</td><td>{transaction.category.name}</td><td>{transaction.type}</td><td className={transaction.type === 'INCOME' ? 'income' : 'expense'}>{currency.format(transaction.amount)}</td></tr>)}</tbody></table></div>}{data && data.totalPages > 1 && <nav className="pagination" aria-label="Paginação">{Array.from({ length: data.totalPages }, (_, index) => <button aria-current={index === page ? 'page' : undefined} aria-label={`Página ${index + 1}`} key={index} onClick={() => setPage(index)}>{index + 1}</button>)}</nav>}</section>
 }

@@ -10,6 +10,7 @@ import type {
   ManualTransactionInput,
   RegistrationDetails,
   Transaction,
+  TransactionPage, TransactionQuery, ImportPreview, CategoryRule,
 } from '../types/api'
 
 const apiUrl = (import.meta.env.VITE_API_URL ?? 'http://localhost:8080/api/v1').replace(
@@ -78,6 +79,13 @@ export function uploadStatement(file: File) {
 export function getTransactions(month: string) {
   return request<Transaction[]>(`/transactions?month=${encodeURIComponent(month)}`)
 }
+export function getTransactionPage(query: TransactionQuery) { const params = new URLSearchParams(Object.entries(query).filter(([, value]) => value !== undefined).map(([key, value]) => [key, String(value)])); return request<TransactionPage>(`/transactions?${params}`) }
+export function previewStatement(file: File) { const body = new FormData(); body.append('file', file); return request<ImportPreview>('/imports/preview', { method: 'POST', body }) }
+export function createCategory(name: string) { return request<Category>('/categories', { method: 'POST', body: JSON.stringify({ name }) }) }
+export function deleteCategory(id: string | number) { return request<void>(`/categories/${id}`, { method: 'DELETE' }) }
+export function getCategoryRules() { return request<CategoryRule[]>('/category-rules') }
+export function createCategoryRule(keyword: string, categoryId: string | number) { return request<CategoryRule>('/category-rules', { method: 'POST', body: JSON.stringify({ keyword, categoryId }) }) }
+export function deleteCategoryRule(id: string | number) { return request<void>(`/category-rules/${id}`, { method: 'DELETE' }) }
 
 export function getCategories() {
   return request<Category[]>('/categories')
@@ -93,6 +101,7 @@ export function updateTransactionCategory(
   })
 }
 
-export function getDashboard(month: string) { return request<DashboardData>(`/dashboard?month=${encodeURIComponent(month)}`) }
+export function getDashboard(month: string, filter = 'both') { return request<DashboardData>(`/dashboard?month=${encodeURIComponent(month)}&filter=${filter}`) }
+export function getBudgets(month: string) { return request<Budget[]>(`/budgets?month=${encodeURIComponent(month)}`) }
 export function updateBudget(categoryId: string | number, month: string, limit: number): Promise<Budget> { return request<Budget>(`/budgets/${categoryId}?month=${encodeURIComponent(month)}`, { method: 'PUT', body: JSON.stringify({ limit }) }) }
 export function createTransaction(transaction: ManualTransactionInput) { return request<Transaction>('/transactions', { method: 'POST', body: JSON.stringify(transaction) }) }
