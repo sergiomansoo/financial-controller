@@ -17,4 +17,8 @@ public enum DashboardFilter {
             case BOTH -> null;
         };
     }
+
+    public boolean includes(TransactionType type) {
+        return this == BOTH || transactionType() == type;
+    }
 }

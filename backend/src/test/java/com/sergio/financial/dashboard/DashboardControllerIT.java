@@ -100,8 +100,27 @@ class DashboardControllerIT {
     }
 
     @Test
-    void filtersCategoryRankingAndReturnsDashboardKpis() throws Exception {
+    void appliesBothFilterToDashboardAggregates() throws Exception {
         String token = register("Filter dashboard", "filter.dashboard@example.test");
+        long categoryId = categoryId(token, "Alimenta\u00e7\u00e3o");
+        createTransaction(token, categoryId, "2026-07-20", "Salary", "100.00", "INCOME");
+        createTransaction(token, categoryId, "2026-07-21", "Lunch", "30.00", "EXPENSE");
+        createTransaction(token, categoryId, "2026-07-22", "Investment", "50.00", "INVESTMENT");
+
+        mockMvc.perform(get("/api/v1/dashboard").param("month", "2026-07").param("filter", "both")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.byCategory[0].spent").value(180))
+                .andExpect(jsonPath("$.totals.income").value(100))
+                .andExpect(jsonPath("$.totals.expense").value(30))
+                .andExpect(jsonPath("$.totals.balance").value(70))
+                .andExpect(jsonPath("$.monthlyEvolution[5].income").value(100))
+                .andExpect(jsonPath("$.monthlyEvolution[5].expense").value(30));
+    }
+
+    @Test
+    void appliesIncomeFilterToDashboardAggregates() throws Exception {
+        String token = register("Income filter", "income.filter@example.test");
         long categoryId = categoryId(token, "Alimenta\u00e7\u00e3o");
         createTransaction(token, categoryId, "2026-07-20", "Salary", "100.00", "INCOME");
         createTransaction(token, categoryId, "2026-07-21", "Lunch", "30.00", "EXPENSE");
@@ -111,8 +130,28 @@ class DashboardControllerIT {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.byCategory[0].spent").value(100))
                 .andExpect(jsonPath("$.totals.income").value(100))
+                .andExpect(jsonPath("$.totals.expense").value(0))
+                .andExpect(jsonPath("$.totals.balance").value(100))
+                .andExpect(jsonPath("$.monthlyEvolution[5].income").value(100))
+                .andExpect(jsonPath("$.monthlyEvolution[5].expense").value(0));
+    }
+
+    @Test
+    void appliesExpenseFilterToDashboardAggregates() throws Exception {
+        String token = register("Expense filter", "expense.filter@example.test");
+        long categoryId = categoryId(token, "Alimenta\u00e7\u00e3o");
+        createTransaction(token, categoryId, "2026-07-20", "Salary", "100.00", "INCOME");
+        createTransaction(token, categoryId, "2026-07-21", "Lunch", "30.00", "EXPENSE");
+
+        mockMvc.perform(get("/api/v1/dashboard").param("month", "2026-07").param("filter", "expense")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.byCategory[0].spent").value(30))
+                .andExpect(jsonPath("$.totals.income").value(0))
                 .andExpect(jsonPath("$.totals.expense").value(30))
-                .andExpect(jsonPath("$.totals.balance").value(70));
+                .andExpect(jsonPath("$.totals.balance").value(-30))
+                .andExpect(jsonPath("$.monthlyEvolution[5].income").value(0))
+                .andExpect(jsonPath("$.monthlyEvolution[5].expense").value(30));
     }
 
     private void createTransaction(String token, long categoryId, String date, String description, String amount, String type) throws Exception {

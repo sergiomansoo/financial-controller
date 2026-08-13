@@ -30,29 +30,36 @@ public class DashboardService {
                 .collect(Collectors.toMap(CategoryExpense::categoryId, CategoryExpense::spent));
 
         return new DashboardResponse(
-                totals(userId, month, expenses),
+                totals(userId, month, filter, expenses),
                 transactions.sumByCategory(userId, month.atDay(1), month.plusMonths(1).atDay(1), filter.transactionType()).stream()
                         .map(expense -> new CategorySpend(expense.categoryId(), expense.categoryName(), expense.spent()))
                         .toList(),
-                monthlyEvolution(userId, month),
+                monthlyEvolution(userId, month, filter),
                 budgets.list(userId, month, expensesByCategory));
     }
 
-    private TotalsResponse totals(Long userId, YearMonth month, List<CategoryExpense> expenses) {
+    private TotalsResponse totals(Long userId, YearMonth month, DashboardFilter filter,
+                                  List<CategoryExpense> expenses) {
         BigDecimal income = BigDecimal.ZERO;
         BigDecimal expense = BigDecimal.ZERO;
         for (FinancialTransaction transaction : transactions
                 .findByUserIdAndDateGreaterThanEqualAndDateLessThanOrderByDateDescIdDesc(
                         userId, month.atDay(1), month.plusMonths(1).atDay(1))) {
-            if (transaction.getType() == TransactionType.INCOME) income = income.add(transaction.getAmount());
-            if (transaction.getType() == TransactionType.EXPENSE) expense = expense.add(transaction.getAmount());
+            if (transaction.getType() == TransactionType.INCOME && filter.includes(TransactionType.INCOME)) {
+                income = income.add(transaction.getAmount());
+            }
+            if (transaction.getType() == TransactionType.EXPENSE && filter.includes(TransactionType.EXPENSE)) {
+                expense = expense.add(transaction.getAmount());
+            }
         }
-        CategoryExpense largest = expenses.stream().max(java.util.Comparator.comparing(CategoryExpense::spent)).orElse(null);
+        CategoryExpense largest = filter.includes(TransactionType.EXPENSE)
+                ? expenses.stream().max(java.util.Comparator.comparing(CategoryExpense::spent)).orElse(null)
+                : null;
         return new TotalsResponse(income.subtract(expense), income, expense,
                 largest == null ? null : largest.categoryName(), largest == null ? BigDecimal.ZERO : largest.spent());
     }
 
-    private List<MonthlyEvolution> monthlyEvolution(Long userId, YearMonth month) {
+    private List<MonthlyEvolution> monthlyEvolution(Long userId, YearMonth month, DashboardFilter filter) {
         YearMonth firstMonth = month.minusMonths(5);
         Map<YearMonth, Totals> totalsByMonth = new TreeMap<>();
         for (YearMonth current = firstMonth; !current.isAfter(month); current = current.plusMonths(1)) {
@@ -64,9 +71,9 @@ public class DashboardService {
                         userId, firstMonth.atDay(1), month.plusMonths(1).atDay(1))) {
             YearMonth transactionMonth = YearMonth.from(transaction.getDate());
             Totals current = totalsByMonth.get(transactionMonth);
-            if (transaction.getType() == TransactionType.INCOME) {
+            if (transaction.getType() == TransactionType.INCOME && filter.includes(TransactionType.INCOME)) {
                 totalsByMonth.put(transactionMonth, new Totals(current.income().add(transaction.getAmount()), current.expense()));
-            } else if (transaction.getType() == TransactionType.EXPENSE) {
+            } else if (transaction.getType() == TransactionType.EXPENSE && filter.includes(TransactionType.EXPENSE)) {
                 totalsByMonth.put(transactionMonth, new Totals(current.income(), current.expense().add(transaction.getAmount())));
             }
         }
