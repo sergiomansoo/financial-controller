@@ -58,3 +58,5 @@ export interface ImportPreview { rows: ImportPreviewRow[]; previewCount: number;
 export interface CategoryRule { id: string | number; keyword: string; category: Category }
 export type TransactionType = 'EXPENSE' | 'INCOME' | 'INVESTMENT'
 export interface ManualTransactionInput { date: string; description: string; amount: number; categoryId: string | number; type: TransactionType }
+export interface SavingsGoal { id: string | number; name: string; targetAmount: number; targetDate: string | null; month: string; plannedAmount: number; savedAmount: number; progressPercent: number; overallSavedAmount: number; overallProgressPercent: number }
+export interface SavingsGoalInput { name: string; targetAmount: number; targetDate: string | null }

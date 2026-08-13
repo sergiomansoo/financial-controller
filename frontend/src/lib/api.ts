@@ -10,7 +10,7 @@ import type {
   ManualTransactionInput,
   RegistrationDetails,
   Transaction,
-  TransactionPage, TransactionQuery, ImportPreview, CategoryRule,
+  TransactionPage, TransactionQuery, ImportPreview, CategoryRule, SavingsGoal, SavingsGoalInput,
 } from '../types/api'
 
 const apiUrl = (import.meta.env.VITE_API_URL ?? 'http://localhost:8080/api/v1').replace(
@@ -94,10 +94,11 @@ export function getCategories() {
 export function updateTransactionCategory(
   id: string | number,
   categoryId: string | number,
+  learn = true,
 ) {
   return request<Transaction>(`/transactions/${id}/category`, {
     method: 'PATCH',
-    body: JSON.stringify({ categoryId, learn: true }),
+    body: JSON.stringify({ categoryId, learn }),
   })
 }
 
@@ -105,3 +106,7 @@ export function getDashboard(month: string, filter = 'both') { return request<Da
 export function getBudgets(month: string) { return request<Budget[]>(`/budgets?month=${encodeURIComponent(month)}`) }
 export function updateBudget(categoryId: string | number, month: string, limit: number): Promise<Budget> { return request<Budget>(`/budgets/${categoryId}?month=${encodeURIComponent(month)}`, { method: 'PUT', body: JSON.stringify({ limit }) }) }
 export function createTransaction(transaction: ManualTransactionInput) { return request<Transaction>('/transactions', { method: 'POST', body: JSON.stringify(transaction) }) }
+export function getSavingsGoals(month: string) { return request<SavingsGoal[]>(`/savings-goals?month=${encodeURIComponent(month)}`) }
+export function createSavingsGoal(goal: SavingsGoalInput) { return request<SavingsGoal>('/savings-goals', { method: 'POST', body: JSON.stringify(goal) }) }
+export function updateSavingsGoalMonth(id: string | number, month: string, plannedAmount: number, savedAmount: number) { return request<SavingsGoal>(`/savings-goals/${id}/months/${month}`, { method: 'PUT', body: JSON.stringify({ plannedAmount, savedAmount }) }) }
+export function deleteSavingsGoal(id: string | number) { return request<void>(`/savings-goals/${id}`, { method: 'DELETE' }) }
