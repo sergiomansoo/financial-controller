@@ -3,7 +3,10 @@ import type {
   ApiProblem,
   AuthCredentials,
   AuthResponse,
+  Category,
+  ImportResponse,
   RegistrationDetails,
+  Transaction,
 } from '../types/api'
 
 const apiUrl = (import.meta.env.VITE_API_URL ?? 'http://localhost:8080/api/v1').replace(
@@ -26,7 +29,9 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const session = getStoredSession()
   const headers = new Headers(options.headers)
 
-  headers.set('Content-Type', 'application/json')
+  if (!(options.body instanceof FormData) && !headers.has('Content-Type')) {
+    headers.set('Content-Type', 'application/json')
+  }
   if (session) {
     headers.set('Authorization', `Bearer ${session.token}`)
   }
@@ -57,5 +62,30 @@ export function register(details: RegistrationDetails) {
   return request<AuthResponse>('/auth/register', {
     method: 'POST',
     body: JSON.stringify(details),
+  })
+}
+
+export function uploadStatement(file: File) {
+  const formData = new FormData()
+  formData.append('file', file)
+
+  return request<ImportResponse>('/imports', { method: 'POST', body: formData })
+}
+
+export function getTransactions(month: string) {
+  return request<Transaction[]>(`/transactions?month=${encodeURIComponent(month)}`)
+}
+
+export function getCategories() {
+  return request<Category[]>('/categories')
+}
+
+export function updateTransactionCategory(
+  id: string | number,
+  categoryId: string | number,
+) {
+  return request<Transaction>(`/transactions/${id}/category`, {
+    method: 'PATCH',
+    body: JSON.stringify({ categoryId, learn: true }),
   })
 }
