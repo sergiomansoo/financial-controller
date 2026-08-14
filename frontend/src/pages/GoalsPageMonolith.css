@@ -1,1 +1,92 @@
 .goals-page .budget-row{grid-template-columns:minmax(0,1fr) minmax(220px,auto);align-items:end}.goals-page .goal-budget-controls{width:100%;min-width:260px;justify-self:end;display:grid;grid-template-columns:minmax(150px,1fr) auto;gap:12px;align-items:end}.goals-page .goal-budget-controls label{min-width:0}.goals-page .goal-budget-controls input{width:100%;min-height:44px;background:#1c1c1e;border:1px solid #2c2c2e;border-radius:8px;color:#fff}.goals-page .goal-budget-controls .ledger-button{min-height:44px;background:#fff;color:#000;border-color:#fff}@media(max-width:767px){.goals-page .budget-row{grid-template-columns:1fr}.goals-page .goal-budget-controls{grid-column:1;grid-row:auto;min-width:0;grid-template-columns:1fr}.goals-page .goal-budget-controls .ledger-button{width:100%}}
+
+/* Savings objective cards follow the Monolith detail layout: progress first,
+   monthly context next, and controls grouped in a quiet action footer. */
+.goals-page .savings-section > .goal-row {
+  background: #121212;
+  border: 1px solid #2c2c2e;
+  border-radius: 12px;
+  padding: 28px;
+  margin: 16px 0 0;
+  gap: 20px;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 2%);
+}
+.goals-page .savings-section > .goal-row > div:first-child {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: 20px;
+  align-items: end;
+  padding: 0;
+}
+.goals-page .savings-section > .goal-row > div:first-child::before {
+  content: 'PROGRESSO ATUAL';
+  grid-column: 1;
+  color: #c4c7c8;
+  font: 700 11px/14px Inter, sans-serif;
+  letter-spacing: .08em;
+  margin-bottom: 8px;
+}
+.goals-page .savings-section > .goal-row h3 {
+  grid-column: 1;
+  grid-row: 2;
+  font: 600 28px/34px Inter, sans-serif;
+  margin: 0;
+}
+.goals-page .savings-section > .goal-row > div:first-child > p:first-of-type {
+  grid-column: 1;
+  grid-row: 3;
+  margin-top: 4px;
+}
+.goals-page .savings-section > .goal-row > div:first-child > p:last-of-type {
+  grid-column: 1 / -1;
+  grid-row: 4;
+  margin-top: 8px;
+  color: #c4c7c8;
+}
+.goals-page .savings-section > .goal-row > div:first-child > p:last-of-type::first-line { color: #e2e2e2; }
+.goals-page .savings-section > .goal-row > div:first-child::after {
+  content: 'RESTANTE';
+  grid-column: 2;
+  grid-row: 1;
+  color: #c4c7c8;
+  font: 700 11px/14px Inter, sans-serif;
+  letter-spacing: .08em;
+  text-align: right;
+  align-self: end;
+  margin-bottom: 5px;
+}
+.goals-page .savings-section > .goal-row .goal-progress { height: 10px; background: #353535; border-radius: 999px; overflow: hidden; }
+.goals-page .savings-section > .goal-row .goal-progress i { border-radius: inherit; }
+.goals-page .savings-section > .goal-row > p {
+  margin: 0;
+  padding: 16px;
+  background: #1b1b1b;
+  border: 1px solid #353535;
+  border-radius: 8px;
+  color: #e2e2e2;
+  font: 14px/20px Inter, sans-serif;
+}
+.goals-page .savings-section > .goal-row > p::first-line { font-weight: 600; }
+.goals-page .savings-section > .goal-row > div:last-of-type {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  padding-top: 4px;
+  border-top: 0;
+}
+.goals-page .savings-section > .goal-row > div:last-of-type label { display: grid; gap: 8px; color: #c4c7c8; font: 700 11px/14px Inter, sans-serif; letter-spacing: .08em; text-transform: uppercase; }
+.goals-page .savings-section > .goal-row > div:last-of-type input { min-height: 44px; width: 100%; box-sizing: border-box; background: #1c1c1e; border: 1px solid transparent; border-radius: 8px; color: #fff; padding: 12px 16px; font: 500 12px/16px 'JetBrains Mono', monospace; }
+.goals-page .savings-section > .goal-row > div:last-of-type input:focus { border-color: #fff; outline: none; }
+.goals-page .savings-section > .goal-row > div:last-of-type button { min-height: 44px; }
+.goals-page .savings-section > .goal-row > div:last-of-type button:first-child { grid-column: 1 / -1; grid-row: 3; justify-self: end; }
+.goals-page .savings-section > .goal-row > div:last-of-type button:nth-of-type(2) { grid-column: 1; grid-row: 4; justify-self: end; }
+.goals-page .savings-section > .goal-row > div:last-of-type button:nth-of-type(3) { grid-column: 2; grid-row: 4; justify-self: start; }
+.goals-page .savings-section > .goal-row > div:last-of-type label:nth-of-type(1) { grid-column: 1; grid-row: 1; }
+.goals-page .savings-section > .goal-row > div:last-of-type label:nth-of-type(2) { grid-column: 2; grid-row: 1; }
+@media(max-width:767px){
+  .goals-page .savings-section > .goal-row { padding: 20px; }
+  .goals-page .savings-section > .goal-row > div:first-child { grid-template-columns: 1fr; }
+  .goals-page .savings-section > .goal-row > div:first-child::after { grid-column: 1; grid-row: 5; text-align: left; }
+  .goals-page .savings-section > .goal-row > div:last-of-type { grid-template-columns: 1fr; }
+  .goals-page .savings-section > .goal-row > div:last-of-type label:nth-of-type(1), .goals-page .savings-section > .goal-row > div:last-of-type label:nth-of-type(2), .goals-page .savings-section > .goal-row > div:last-of-type button:first-child, .goals-page .savings-section > .goal-row > div:last-of-type button:nth-of-type(2), .goals-page .savings-section > .goal-row > div:last-of-type button:nth-of-type(3) { grid-column: 1; justify-self: stretch; }
+}
