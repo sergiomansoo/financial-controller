@@ -11,7 +11,7 @@ vi.mock('recharts', () => ({
   Cell: () => null,
   Line: () => null,
   CartesianGrid: () => null,
-  Tooltip: ({ contentStyle }: { contentStyle?: { backgroundColor?: string; border?: string } }) => <output data-testid="monolith-chart-tooltip" data-background={contentStyle?.backgroundColor} data-border={contentStyle?.border} />,
+  Tooltip: ({ contentStyle, itemStyle, labelStyle }: { contentStyle?: { backgroundColor?: string; border?: string }; itemStyle?: { color?: string }; labelStyle?: { color?: string } }) => <output data-testid="monolith-chart-tooltip" data-background={contentStyle?.backgroundColor} data-border={contentStyle?.border} data-item-color={itemStyle?.color} data-label-color={labelStyle?.color} />,
   XAxis: () => null,
   YAxis: () => null,
 }))
@@ -54,5 +54,7 @@ describe('LedgerCharts', () => {
     render(<LedgerCharts categories={categories} evolution={evolution} />)
     expect(screen.getAllByTestId('monolith-chart-tooltip')).toHaveLength(2)
     expect(screen.getAllByTestId('monolith-chart-tooltip')[0]).toHaveAttribute('data-background', '#18181a')
+    expect(screen.getAllByTestId('monolith-chart-tooltip')[0]).toHaveAttribute('data-item-color', '#ffffff')
+    expect(screen.getAllByTestId('monolith-chart-tooltip')[0]).toHaveAttribute('data-label-color', '#ffffff')
   })
 })

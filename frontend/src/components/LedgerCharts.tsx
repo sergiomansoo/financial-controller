@@ -22,6 +22,7 @@ const tooltipStyle = {
   color: "#fff",
   fontFamily: "JetBrains Mono, monospace",
 };
+const tooltipTextStyle = { color: "#ffffff" };
 export function LedgerCharts({
   categories,
   evolution,
@@ -63,7 +64,7 @@ export function LedgerCharts({
                   >
                     {categories.slice(0, 5).map((item, index) => <Cell key={item.categoryId} fill={["#ffffff", "#a3a3a3", "#666666", "#353535", "#1f1f1f"][index]} />)}
                   </Pie>
-                  <Tooltip contentStyle={tooltipStyle} />
+                  <Tooltip contentStyle={tooltipStyle} itemStyle={tooltipTextStyle} labelStyle={tooltipTextStyle} />
                 </PieChart>
               </ResponsiveContainer>
               <span>Despesa Total</span>
@@ -104,7 +105,7 @@ export function LedgerCharts({
                   <CartesianGrid stroke="var(--monolith-border, var(--ledger-border))" />
                   <XAxis dataKey="month" />
                   <YAxis />
-                  <Tooltip contentStyle={tooltipStyle} />
+                  <Tooltip contentStyle={tooltipStyle} itemStyle={tooltipTextStyle} labelStyle={tooltipTextStyle} />
                   <Line
                     dataKey="income"
                     name="Rendas"

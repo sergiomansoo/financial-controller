@@ -191,7 +191,7 @@ export function DashboardPage() {
         </section>
         <aside className="monolith-side">
           <LedgerCharts
-            categories={data.byCategory}
+            categories={data.expenseByCategory ?? data.byCategory}
             evolution={data.monthlyEvolution}
             showEvolution={false}
           />

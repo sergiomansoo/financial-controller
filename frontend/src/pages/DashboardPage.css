@@ -20,7 +20,7 @@
 .monolith-flow>p { color:var(--monolith-muted); margin:0 0 20px; }
 .monolith-flow .ledger-chart-grid,.monolith-side .ledger-chart-grid { grid-template-columns:1fr; }
 .monolith-flow .ledger-panel { padding:0; border:0; background:transparent; }
-.monolith-flow .ledger-chart { height:360px; }
+.monolith-flow .ledger-chart { height:320px; }
 .monolith-side { display:grid; gap:16px; align-content:start; }
 .monolith-side .ledger-panel { padding:20px; }
 .monolith-side .ledger-chart { height:220px; }
