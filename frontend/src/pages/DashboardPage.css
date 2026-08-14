@@ -24,7 +24,7 @@
 .monolith-side { display:grid; gap:16px; align-content:start; }
 .monolith-side .ledger-panel { padding:20px; }
 .monolith-side .ledger-chart { height:220px; }
-.monolith-side .monolith-donut { height:240px; }
+.monolith-side .monolith-donut { height:240px; position:relative; }
 .monolith-donut>span { display:block; position:absolute; top:46%; left:50%; transform:translate(-50%,-50%); color:var(--monolith-muted); font:700 10px Inter,sans-serif; letter-spacing:.08em; text-transform:uppercase; white-space:nowrap; }
 .monolith-donut>strong { position:absolute; top:54%; left:50%; transform:translate(-50%,-50%); font:600 20px 'JetBrains Mono',monospace; white-space:nowrap; }
 .monolith-bottom { display:grid; grid-template-columns:1fr; gap:16px; margin-top:16px; }
