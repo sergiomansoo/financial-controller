@@ -64,7 +64,9 @@ public class TransactionService {
                                           LocalDate fromDate, LocalDate toDate) {
         DateRange range = dateRange(month, fromDate, toDate);
         BigDecimal total = transactions.sumFiltered(userId, range.from(), range.until(), type, categoryId);
-        return new TransactionTotalResponse(total == null ? BigDecimal.ZERO : total);
+        BigDecimal totalSpent = transactions.sumSpent(userId, range.from(), range.until(), type, categoryId);
+        return new TransactionTotalResponse(total == null ? BigDecimal.ZERO : total,
+                totalSpent == null ? BigDecimal.ZERO : totalSpent);
     }
 
     @Transactional

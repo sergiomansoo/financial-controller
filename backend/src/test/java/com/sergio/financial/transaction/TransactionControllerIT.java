@@ -118,21 +118,30 @@ class TransactionControllerIT {
         String owner = register("Total owner", "total.owner@example.test");
         String other = register("Total other", "total.other@example.test");
         long categoryId = firstCategoryId(owner);
+        long otherCategoryId = createCategory(owner, "Other fictional expense category");
 
         createTransaction(owner, categoryId, "2026-07-02", "Fictional expense one", "-20.00", "EXPENSE");
         createTransaction(owner, categoryId, "2026-07-20", "Fictional expense two", "-5.00", "EXPENSE");
         createTransaction(owner, categoryId, "2026-07-20", "Fictional income", "100.00", "INCOME");
         createTransaction(owner, categoryId, "2026-08-01", "Fictional outside range", "-50.00", "EXPENSE");
+        createTransaction(owner, otherCategoryId, "2026-07-20", "Fictional other category expense", "-40.00", "EXPENSE");
         createTransaction(other, categoryId, "2026-07-20", "Other user expense", "-999.00", "EXPENSE");
 
         mockMvc.perform(get("/api/v1/transactions/total")
                         .param("from", "2026-07-01")
                         .param("to", "2026-07-31")
-                        .param("type", "EXPENSE")
                         .param("categoryId", Long.toString(categoryId))
                         .header("Authorization", "Bearer " + owner))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.total").value(-25));
+                .andExpect(jsonPath("$.total").value(75))
+                .andExpect(jsonPath("$.totalSpent").value(25));
+
+        mockMvc.perform(get("/api/v1/transactions/total")
+                        .param("month", "2026-07")
+                        .param("categoryId", Long.toString(otherCategoryId))
+                        .header("Authorization", "Bearer " + owner))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalSpent").value(40));
 
         mockMvc.perform(get("/api/v1/transactions/total")
                         .param("month", "2026-07")
@@ -142,6 +151,16 @@ class TransactionControllerIT {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
                 .andExpect(jsonPath("$.fieldErrors.month").isNotEmpty());
+    }
+
+    private long createCategory(String token, String name) throws Exception {
+        MvcResult result = mockMvc.perform(post("/api/v1/categories")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"%s\"}".formatted(name)))
+                .andExpect(status().isCreated())
+                .andReturn();
+        return objectMapper.readTree(result.getResponse().getContentAsString()).path("id").asLong();
     }
 
     private void createTransaction(String token, long categoryId, String date, String description, String amount, String type)

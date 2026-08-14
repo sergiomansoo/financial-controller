@@ -46,6 +46,18 @@ public interface FinancialTransactionRepository extends JpaRepository<FinancialT
                                      @Param("categoryId") Long categoryId);
 
     @Query("""
+            select sum(abs(transaction.amount)) from FinancialTransaction transaction
+            where transaction.user.id = :userId
+              and transaction.date >= :from and transaction.date < :until
+              and transaction.type = com.sergio.financial.transaction.TransactionType.EXPENSE
+              and (:type is null or transaction.type = :type)
+              and (:categoryId is null or transaction.category.id = :categoryId)
+            """)
+    java.math.BigDecimal sumSpent(@Param("userId") Long userId, @Param("from") LocalDate from,
+                                  @Param("until") LocalDate until, @Param("type") TransactionType type,
+                                  @Param("categoryId") Long categoryId);
+
+    @Query("""
             select new com.sergio.financial.transaction.CategoryExpense(
                 transaction.category.id, transaction.category.name,
                 sum(case when transaction.type = com.sergio.financial.transaction.TransactionType.EXPENSE
