@@ -113,6 +113,8 @@ class DashboardControllerIT {
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.byCategory[0].spent").value(180))
+                .andExpect(jsonPath("$.expenseByCategory.length()").value(1))
+                .andExpect(jsonPath("$.expenseByCategory[0].spent").value(30))
                 .andExpect(jsonPath("$.totals.income").value(100))
                 .andExpect(jsonPath("$.totals.expense").value(30))
                 .andExpect(jsonPath("$.totals.balance").value(70))

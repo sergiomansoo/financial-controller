@@ -35,6 +35,7 @@ public class DashboardService {
                 transactions.sumByCategory(userId, month.atDay(1), month.plusMonths(1).atDay(1), filter.transactionType()).stream()
                         .map(expense -> new CategorySpend(expense.categoryId(), expense.categoryName(), expense.spent()))
                         .toList(),
+                expenses,
                 monthlyEvolution(userId, month, filter),
                 budgets.list(userId, month, expensesByCategory));
     }
@@ -133,7 +134,8 @@ public class DashboardService {
                                  BigDecimal receivedInvestedPercent) {
     }
 
-    public record DashboardResponse(TotalsResponse totals, List<CategorySpend> byCategory, List<MonthlyEvolution> monthlyEvolution,
+    public record DashboardResponse(TotalsResponse totals, List<CategorySpend> byCategory, List<CategoryExpense> expenseByCategory,
+                                    List<MonthlyEvolution> monthlyEvolution,
                                     List<BudgetResponse> budgets) {
     }
 }
