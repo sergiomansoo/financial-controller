@@ -2,6 +2,7 @@ import { Menu, PanelLeftClose } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { MovementFilter } from './MovementFilter'
 import { Sidebar } from './Sidebar'
+import './MonolithShell.css'
 
 export function AppLayout({ children }: { children: ReactNode }) {
   const [collapsed, setCollapsed] = useState(false)
