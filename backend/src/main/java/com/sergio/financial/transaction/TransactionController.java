@@ -26,7 +26,7 @@ public class TransactionController {
     }
 
     @GetMapping
-    public Object list(@RequestParam YearMonth month,
+    public Object list(@RequestParam(required = false) YearMonth month,
                        @RequestParam(required = false) TransactionType type,
                        @RequestParam(required = false) Long categoryId,
                        @RequestParam(required = false) LocalDate from,
@@ -39,6 +39,16 @@ public class TransactionController {
         }
         return transactions.page(userId(authentication), month, type, categoryId, from, to,
                 page == null ? 0 : page, size == null ? 10 : size);
+    }
+
+    @GetMapping("/total")
+    public TransactionTotalResponse total(@RequestParam(required = false) YearMonth month,
+                                          @RequestParam(required = false) TransactionType type,
+                                          @RequestParam(required = false) Long categoryId,
+                                          @RequestParam(required = false) LocalDate from,
+                                          @RequestParam(required = false) LocalDate to,
+                                          Authentication authentication) {
+        return transactions.total(userId(authentication), month, type, categoryId, from, to);
     }
 
     @PostMapping

@@ -93,6 +93,24 @@ class AuthControllerIT {
     }
 
     @Test
+    void acceptsFreshLoginTokenForBudgetsAndSavingsGoals() throws Exception {
+        register("Login Session", "login.session@example.test", "FictionalPassword1!");
+        MvcResult login = mockMvc.perform(post("/api/v1/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\":\"login.session@example.test\",\"password\":\"FictionalPassword1!\"}"))
+                .andExpect(status().isOk())
+                .andReturn();
+        String token = objectMapper.readTree(login.getResponse().getContentAsString()).path("accessToken").asText();
+
+        mockMvc.perform(get("/api/v1/budgets").param("month", "2026-07")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk());
+        mockMvc.perform(get("/api/v1/savings-goals").param("month", "2026-07")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk());
+    }
+
+    @Test
     void rejectsTooLongRegistrationEmailWithFieldErrors() throws Exception {
         String email = "a".repeat(244) + "@example.test";
 

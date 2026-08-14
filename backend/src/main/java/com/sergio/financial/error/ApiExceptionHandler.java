@@ -8,6 +8,7 @@ import com.sergio.financial.category.CategoryNotFoundException;
 import com.sergio.financial.importer.UnsupportedStatementFormatException;
 import com.sergio.financial.rule.CategoryRuleNotFoundException;
 import com.sergio.financial.transaction.TransactionNotFoundException;
+import com.sergio.financial.transaction.InvalidTransactionFilterException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -70,6 +71,12 @@ public class ApiExceptionHandler {
     @ExceptionHandler(TransactionNotFoundException.class)
     ResponseEntity<ErrorResponse> transactionNotFound(TransactionNotFoundException exception) {
         return error(HttpStatus.NOT_FOUND, "TRANSACTION_NOT_FOUND", "Transaction was not found.");
+    }
+
+    @ExceptionHandler(InvalidTransactionFilterException.class)
+    ResponseEntity<ErrorResponse> invalidTransactionFilter(InvalidTransactionFilterException exception) {
+        return ResponseEntity.badRequest().body(new ErrorResponse(400, "VALIDATION_ERROR", exception.getMessage(),
+                exception.getFieldErrors()));
     }
 
     @ExceptionHandler(CategoryNotFoundException.class)

@@ -51,11 +51,20 @@ public class TransactionService {
     @Transactional(readOnly = true)
     public TransactionPageResponse page(Long userId, YearMonth month, TransactionType type, Long categoryId,
                                         LocalDate fromDate, LocalDate toDate, int page, int size) {
+        DateRange range = dateRange(month, fromDate, toDate);
         int safePage = Math.max(0, page);
         int safeSize = Math.min(100, Math.max(1, size));
         Pageable pageable = PageRequest.of(safePage, safeSize);
-        return TransactionPageResponse.from(transactions.search(userId, month.atDay(1), month.plusMonths(1).atDay(1),
-                type, categoryId, fromDate, toDate, pageable).map(this::response));
+        return TransactionPageResponse.from(transactions.search(userId, range.from(), range.until(),
+                type, categoryId, null, null, pageable).map(this::response));
+    }
+
+    @Transactional(readOnly = true)
+    public TransactionTotalResponse total(Long userId, YearMonth month, TransactionType type, Long categoryId,
+                                          LocalDate fromDate, LocalDate toDate) {
+        DateRange range = dateRange(month, fromDate, toDate);
+        BigDecimal total = transactions.sumFiltered(userId, range.from(), range.until(), type, categoryId);
+        return new TransactionTotalResponse(total == null ? BigDecimal.ZERO : total);
     }
 
     @Transactional
@@ -101,6 +110,25 @@ public class TransactionService {
                 .orElseThrow(TransactionNotFoundException::new);
     }
 
+    private DateRange dateRange(YearMonth month, LocalDate fromDate, LocalDate toDate) {
+        if (month != null && (fromDate != null || toDate != null)) {
+            throw new InvalidTransactionFilterException("Não combine mês com De/Até.",
+                    java.util.Map.of("month", "Não combine mês com De/Até."));
+        }
+        if (month != null) {
+            return new DateRange(month.atDay(1), month.plusMonths(1).atDay(1));
+        }
+        if (fromDate == null || toDate == null) {
+            throw new InvalidTransactionFilterException("Informe as datas De e Até juntas.",
+                    java.util.Map.of(fromDate == null ? "from" : "to", "Informe as datas De e Até juntas."));
+        }
+        if (fromDate.isAfter(toDate)) {
+            throw new InvalidTransactionFilterException("A data De deve ser anterior ou igual a Até.",
+                    java.util.Map.of("to", "A data De deve ser anterior ou igual a Até."));
+        }
+        return new DateRange(fromDate, toDate.plusDays(1));
+    }
+
     private TransactionType typeFor(String history) {
         String normalized = categorization.normalize(history);
         if (normalized.contains("aplica\u00e7\u00e3o") || normalized.contains("resgate") || normalized.contains("cdb")) {
@@ -121,5 +149,8 @@ public class TransactionService {
     }
 
     public record ImportedTransaction(TransactionResponse transaction, boolean duplicate) {
+    }
+
+    private record DateRange(LocalDate from, LocalDate until) {
     }
 }

@@ -113,6 +113,37 @@ class TransactionControllerIT {
                 .andExpect(jsonPath("$.totalPages").value(1));
     }
 
+    @Test
+    void returnsSignedTotalForTheOwnersCategoryTypeAndCustomDateRange() throws Exception {
+        String owner = register("Total owner", "total.owner@example.test");
+        String other = register("Total other", "total.other@example.test");
+        long categoryId = firstCategoryId(owner);
+
+        createTransaction(owner, categoryId, "2026-07-02", "Fictional expense one", "-20.00", "EXPENSE");
+        createTransaction(owner, categoryId, "2026-07-20", "Fictional expense two", "-5.00", "EXPENSE");
+        createTransaction(owner, categoryId, "2026-07-20", "Fictional income", "100.00", "INCOME");
+        createTransaction(owner, categoryId, "2026-08-01", "Fictional outside range", "-50.00", "EXPENSE");
+        createTransaction(other, categoryId, "2026-07-20", "Other user expense", "-999.00", "EXPENSE");
+
+        mockMvc.perform(get("/api/v1/transactions/total")
+                        .param("from", "2026-07-01")
+                        .param("to", "2026-07-31")
+                        .param("type", "EXPENSE")
+                        .param("categoryId", Long.toString(categoryId))
+                        .header("Authorization", "Bearer " + owner))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.total").value(-25));
+
+        mockMvc.perform(get("/api/v1/transactions/total")
+                        .param("month", "2026-07")
+                        .param("from", "2026-07-01")
+                        .param("to", "2026-07-31")
+                        .header("Authorization", "Bearer " + owner))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
+                .andExpect(jsonPath("$.fieldErrors.month").isNotEmpty());
+    }
+
     private void createTransaction(String token, long categoryId, String date, String description, String amount, String type)
             throws Exception {
         mockMvc.perform(post("/api/v1/transactions")
