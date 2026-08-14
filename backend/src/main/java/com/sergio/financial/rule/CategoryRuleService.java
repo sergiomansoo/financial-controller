@@ -4,6 +4,7 @@ import com.sergio.financial.category.Category;
 import com.sergio.financial.category.CategoryRepository;
 import com.sergio.financial.category.CategoryResponse;
 import com.sergio.financial.transaction.TransactionNotFoundException;
+import com.sergio.financial.transaction.FinancialTransactionRepository;
 import com.sergio.financial.user.User;
 import com.sergio.financial.user.UserRepository;
 import java.util.List;
@@ -16,13 +17,15 @@ public class CategoryRuleService {
     private final CategoryRepository categories;
     private final UserRepository users;
     private final CategorizationService categorization;
+    private final FinancialTransactionRepository transactions;
 
     public CategoryRuleService(CategoryRuleRepository rules, CategoryRepository categories, UserRepository users,
-                               CategorizationService categorization) {
+                               CategorizationService categorization, FinancialTransactionRepository transactions) {
         this.rules = rules;
         this.categories = categories;
         this.users = users;
         this.categorization = categorization;
+        this.transactions = transactions;
     }
 
     @Transactional(readOnly = true)
@@ -46,6 +49,14 @@ public class CategoryRuleService {
     public void delete(Long userId, Long ruleId) {
         CategoryRule rule = rules.findByIdAndUserId(ruleId, userId).orElseThrow(CategoryRuleNotFoundException::new);
         rules.delete(rule);
+    }
+
+    @Transactional
+    public CategoryRuleApplyResponse apply(Long userId, Long ruleId) {
+        CategoryRule rule = rules.findByIdAndUserId(ruleId, userId).orElseThrow(CategoryRuleNotFoundException::new);
+        int changedCount = transactions.reclassifyByNormalizedDescriptionPrefix(userId,
+                categorization.normalize(rule.getNormalizedDescription()), rule.getCategory(), rule.getCategory().getId());
+        return new CategoryRuleApplyResponse(changedCount);
     }
 
     private CategoryRuleResponse response(CategoryRule rule) {

@@ -64,6 +64,48 @@ class CategoryRuleControllerIT {
     }
 
     @Test
+    void appliesRuleToNormalizedDescriptionPrefixAndReturnsOnlyChangedTransactions() throws Exception {
+        String owner = register("Rule apply owner", "rule.apply.owner@example.test");
+        long otherCategoryId = createCategory(owner, "Before reclassification");
+        long targetCategoryId = createCategory(owner, "After reclassification");
+        long ruleId = createRule(owner, targetCategoryId, "Caf\u00e9");
+        createTransaction(owner, otherCategoryId, "CAF\u00c9 da manh\u00e3", "2026-08-10");
+        createTransaction(owner, otherCategoryId, "Meu caf\u00e9", "2026-08-11");
+        createTransaction(owner, targetCategoryId, "Caf\u00e9 j\u00e1 correto", "2026-08-12");
+
+        mockMvc.perform(post("/api/v1/category-rules/{ruleId}/apply", ruleId)
+                        .header("Authorization", "Bearer " + owner))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.changedCount").value(1));
+
+        mockMvc.perform(get("/api/v1/transactions").param("month", "2026-08")
+                        .header("Authorization", "Bearer " + owner))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[?(@.description == 'CAF\u00c9 da manh\u00e3')].category.name")
+                        .value("After reclassification"))
+                .andExpect(jsonPath("$[?(@.description == 'Meu caf\u00e9')].category.name")
+                        .value("Before reclassification"));
+
+        mockMvc.perform(post("/api/v1/category-rules/{ruleId}/apply", ruleId)
+                        .header("Authorization", "Bearer " + owner))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.changedCount").value(0));
+    }
+
+    @Test
+    void rejectsApplyingAnotherUsersRuleWithoutChangingTheirTransactions() throws Exception {
+        String owner = register("Rule owner", "rule.owner@example.test");
+        String other = register("Rule other", "rule.other@example.test");
+        long ownerCategoryId = createCategory(owner, "Owner category");
+        long ruleId = createRule(owner, ownerCategoryId, "Mercado");
+
+        mockMvc.perform(post("/api/v1/category-rules/{ruleId}/apply", ruleId)
+                        .header("Authorization", "Bearer " + other))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("CATEGORY_RULE_NOT_FOUND"));
+    }
+
+    @Test
     void deletesOnlyTheOwnersUnusedCategoriesAndRules() throws Exception {
         String owner = register("Owner", "category.owner@example.test");
         String other = register("Other", "category.other@example.test");
@@ -124,6 +166,14 @@ class CategoryRuleControllerIT {
                         .content("{\"keyword\":\"%s\",\"categoryId\":%d}".formatted(keyword, categoryId)))
                 .andExpect(status().isCreated()).andReturn();
         return objectMapper.readTree(rule.getResponse().getContentAsString()).path("id").asLong();
+    }
+
+    private void createTransaction(String token, long categoryId, String description, String date) throws Exception {
+        mockMvc.perform(post("/api/v1/transactions").header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"date\":\"%s\",\"description\":\"%s\",\"amount\":\"-10.00\",\"categoryId\":%d,\"type\":\"EXPENSE\"}"
+                                .formatted(date, description, categoryId)))
+                .andExpect(status().isCreated());
     }
 
     private long firstCategoryId(String token) throws Exception {

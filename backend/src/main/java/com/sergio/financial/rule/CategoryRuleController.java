@@ -33,6 +33,11 @@ public class CategoryRuleController {
         return service.create(Long.valueOf(authentication.getName()), request);
     }
 
+    @PostMapping("/{ruleId}/apply")
+    public CategoryRuleApplyResponse apply(@PathVariable Long ruleId, Authentication authentication) {
+        return service.apply(Long.valueOf(authentication.getName()), ruleId);
+    }
+
     @DeleteMapping("/{ruleId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable Long ruleId, Authentication authentication) {

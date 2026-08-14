@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -18,6 +19,19 @@ public interface FinancialTransactionRepository extends JpaRepository<FinancialT
     boolean existsByUserIdAndDuplicateFingerprint(Long userId, String duplicateFingerprint);
 
     boolean existsByCategoryId(Long categoryId);
+
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query("""
+            update FinancialTransaction transaction
+            set transaction.category = :category
+            where transaction.user.id = :userId
+              and transaction.normalizedDescription like concat(:keyword, '%')
+              and transaction.category.id <> :categoryId
+            """)
+    int reclassifyByNormalizedDescriptionPrefix(@Param("userId") Long userId,
+                                                @Param("keyword") String keyword,
+                                                @Param("category") com.sergio.financial.category.Category category,
+                                                @Param("categoryId") Long categoryId);
 
     @Query("""
             select transaction from FinancialTransaction transaction
