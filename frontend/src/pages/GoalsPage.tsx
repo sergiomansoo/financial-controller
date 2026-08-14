@@ -1,6 +1,7 @@
 import { type FormEvent, type KeyboardEvent, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import './GoalsPage.css'
 import './GoalsPageLayout.css'
+import './GoalsPageMonolith.css'
 import { useNavigate } from 'react-router-dom'
 import { createSavingsGoal, deleteSavingsGoal, getBudgets, getSavingsGoals, updateBudget, updateSavingsGoalMonth } from '../lib/api'
 import { useAuth } from '../lib/auth'
