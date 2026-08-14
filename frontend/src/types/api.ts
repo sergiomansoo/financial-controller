@@ -54,7 +54,7 @@ export interface DashboardTotals { income: number; expense: number; balance: num
 export interface DashboardData { totals?: DashboardTotals; byCategory: CategorySpending[]; monthlyEvolution: MonthlyEvolution[]; budgets: Budget[] }
 export interface TransactionPage { content: Transaction[]; page: number; size: number; totalElements: number; totalPages: number }
 export interface TransactionQuery { month?: string; type?: 'INCOME' | 'EXPENSE'; categoryId?: string; from?: string; to?: string; page?: number; size?: number }
-export interface TransactionTotal { total: number }
+export interface TransactionTotal { total: number; totalSpent: number }
 export interface TransactionTotalQuery { month?: string; from?: string; to?: string; type?: 'INCOME' | 'EXPENSE'; categoryId?: string }
 export interface ImportPreviewRow { date: string; history: string; description: string | null; amount: number; type: string; duplicate: boolean }
 export interface ImportPreview { rows: ImportPreviewRow[]; previewCount: number; duplicateCount: number }
