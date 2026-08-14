@@ -62,6 +62,43 @@ class ImportControllerIT {
     }
 
     @Test
+    void recordsSuccessfulImportsForTheAuthenticatedUserInReverseChronologicalOrder() throws Exception {
+        String token = register("Import History User", "import.history@example.test");
+
+        mockMvc.perform(importStatement("first.csv", token, statement("""
+                15/07/2026;Compra;Primeira Compra;-18,50;981,50
+                """)))
+                .andExpect(status().isOk());
+        mockMvc.perform(importStatement("latest.csv", token, statement("""
+                16/07/2026;Compra;Compra Mais Recente;-22,00;959,50
+                """)))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/v1/imports").header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].originalFilename").value("latest.csv"))
+                .andExpect(jsonPath("$[0].importedAt").isNotEmpty())
+                .andExpect(jsonPath("$[0].rowCount").value(1))
+                .andExpect(jsonPath("$[1].originalFilename").value("first.csv"))
+                .andExpect(jsonPath("$[1].rowCount").value(1));
+    }
+
+    @Test
+    void doesNotRecordFailedImports() throws Exception {
+        String token = register("Failed Import History", "failed.import.history@example.test");
+        MockMultipartFile file = new MockMultipartFile("file", "broken.csv", "text/csv",
+                "not a Banco Inter statement".getBytes(StandardCharsets.UTF_8));
+
+        mockMvc.perform(multipart("/api/v1/imports").file(file).header("Authorization", "Bearer " + token))
+                .andExpect(status().isBadRequest());
+
+        mockMvc.perform(get("/api/v1/imports").header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
+    }
+
+    @Test
     void rejectsInvalidStatementFormatWithStandardErrorBody() throws Exception {
         String token = register("Invalid Import", "invalid.import@example.test");
         MockMultipartFile file = new MockMultipartFile("file", "not-inter.csv", "text/csv",
@@ -123,7 +160,11 @@ class ImportControllerIT {
     }
 
     private org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder importStatement(String token, String csv) {
-        MockMultipartFile file = new MockMultipartFile("file", "statement.csv", "text/csv",
+        return importStatement("statement.csv", token, csv);
+    }
+
+    private org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder importStatement(String filename, String token, String csv) {
+        MockMultipartFile file = new MockMultipartFile("file", filename, "text/csv",
                 csv.getBytes(StandardCharsets.UTF_8));
         return multipart("/api/v1/imports").file(file).header("Authorization", "Bearer " + token);
     }
