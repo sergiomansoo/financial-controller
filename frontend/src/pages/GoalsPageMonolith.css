@@ -79,17 +79,19 @@
 .goals-page .savings-section > .goal-row > div:last-of-type button:nth-of-type(3) { grid-column: 2; grid-row: 4; justify-self: start; }
 .goals-page .savings-section button[aria-label^="Excluir objetivo"] {
   position: absolute;
-  top: 24px;
-  right: 28px;
+  top: 18px;
+  right: 20px;
   z-index: 2;
-  min-height: 30px;
-  padding: 5px 10px;
+  min-height: 24px;
+  padding: 3px 7px;
   border: 0;
   background: transparent;
   color: #ffb4ab;
-  font-size: 12px;
+  font: 500 11px/14px Inter, sans-serif;
+  letter-spacing: .02em;
+  opacity: .72;
 }
-.goals-page .savings-section button[aria-label^="Excluir objetivo"]:hover { background: rgb(255 180 171 / 10%); }
+.goals-page .savings-section button[aria-label^="Excluir objetivo"]:hover { background: rgb(255 180 171 / 10%); opacity: 1; }
 .goals-page .savings-section > .goal-row > div:last-of-type button:first-child { grid-column: 2; grid-row: 2; justify-self: end; }
 .goals-page .savings-section > .goal-row > div:last-of-type button:nth-of-type(2) { grid-column: 1; grid-row: 2; justify-self: start; }
 .goals-page .savings-section > .goal-row > div:last-of-type label:nth-of-type(1) { grid-column: 1; grid-row: 1; }
@@ -97,7 +99,7 @@
 @media(max-width:767px){
   .goals-page .savings-section > .goal-row { padding: 20px; }
   .goals-page .savings-section > .goal-row > div:first-child { grid-template-columns: 1fr; }
-  .goals-page .savings-section button[aria-label^="Excluir objetivo"] { top: 18px; right: 20px; }
+  .goals-page .savings-section button[aria-label^="Excluir objetivo"] { top: 14px; right: 16px; }
   .goals-page .savings-section > .goal-row > div:first-child > p:last-of-type { grid-column: 1; grid-row: 4; max-width: none; text-align: left; }
   .goals-page .savings-section > .goal-row > div:last-of-type { grid-template-columns: 1fr; }
   .goals-page .savings-section > .goal-row > div:last-of-type label:nth-of-type(1), .goals-page .savings-section > .goal-row > div:last-of-type label:nth-of-type(2), .goals-page .savings-section > .goal-row > div:last-of-type button:first-child, .goals-page .savings-section > .goal-row > div:last-of-type button:nth-of-type(2), .goals-page .savings-section > .goal-row > div:last-of-type button:nth-of-type(3) { grid-column: 1; justify-self: stretch; }
