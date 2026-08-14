@@ -1,13 +1,14 @@
 import { type FormEvent, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 
 import { ApiError, login } from '../lib/api'
 import { useAuth } from '../lib/auth'
 
 export function LoginPage() {
   const navigate = useNavigate()
+  const location = useLocation()
   const { saveSession } = useAuth()
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(() => (location.state as { message?: string } | null)?.message ?? null)
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
