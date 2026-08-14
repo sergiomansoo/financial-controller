@@ -173,11 +173,6 @@ export function DashboardPage() {
           context="Total investido"
         />
       </div>
-      <Highlights
-        filter={filter}
-        income={largestIncome}
-        expense={largestExpense}
-      />
       <div className="monolith-layout">
         <section className="monolith-flow" aria-label="Fluxo financeiro">
           <h2>Saldo total</h2>
@@ -242,36 +237,6 @@ function Kpi({
       <strong>{currency.format(Math.abs(value))}</strong>
       <small>{context}</small>
     </article>
-  );
-}
-function Highlights({
-  filter,
-  income,
-  expense,
-}: {
-  filter: string;
-  income?: { categoryName: string; amount: number };
-  expense?: { categoryName: string; amount: number };
-}) {
-  return (
-    <section className="monolith-highlights" aria-label="Destaques do período">
-      {filter !== "income" && (
-        <p>
-          <span>Maior despesa</span>
-          <strong>{expense?.categoryName ?? "—"}</strong>
-          {expense && (
-            <small>{currency.format(Math.abs(expense.amount))}</small>
-          )}
-        </p>
-      )}
-      {filter !== "expense" && (
-        <p>
-          <span>Maior receita</span>
-          <strong>{income?.categoryName ?? "—"}</strong>
-          {income && <small>{currency.format(Math.abs(income.amount))}</small>}
-        </p>
-      )}
-    </section>
   );
 }
 function SavingsPlans({

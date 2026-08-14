@@ -7,9 +7,9 @@
 .monolith-header p { font:500 11px 'JetBrains Mono',monospace; letter-spacing:.12em; }
 .monolith-dashboard h1,.monolith-dashboard h2 { font-family:Inter,system-ui,sans-serif; }
 .monolith-month input { background:var(--monolith-control); border-color:var(--monolith-border); border-radius:8px; font-family:'JetBrains Mono',monospace; }
-.monolith-kpi-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; margin-bottom:16px; }
+.monolith-kpi-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; margin-bottom:16px; align-items:stretch; }
 .monolith-kpi,.monolith-panel,.monolith-flow { background:var(--monolith-panel); border:1px solid var(--monolith-border); border-radius:8px; }
-.monolith-kpi { padding:20px; min-height:150px; display:grid; align-content:space-between; }
+.monolith-kpi { padding:20px; min-height:150px; height:100%; display:grid; align-content:space-between; }
 .monolith-kpi>span { display:flex; align-items:center; gap:8px; color:var(--monolith-muted); font-size:13px; }
 .monolith-kpi strong,.monolith-flow>strong { font:600 36px Inter,sans-serif; letter-spacing:-.04em; }
 .monolith-kpi small,.monolith-flow>p { font:400 12px 'JetBrains Mono',monospace; }
