@@ -244,7 +244,7 @@ class DashboardControllerIT {
                         .header("Authorization", "Bearer " + owner))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totals.salaryCommittedPercent").value(33.33))
-                .andExpect(jsonPath("$.totals.receivedInvestedPercent").value(12.5));
+                .andExpect(jsonPath("$.totals.receivedInvestedPercent").value(16.67));
 
         createTransaction(other, expenseCategory, "2026-08-10", "Other expense", "-10.00", "EXPENSE");
 
