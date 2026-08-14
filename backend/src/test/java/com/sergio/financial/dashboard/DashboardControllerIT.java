@@ -14,6 +14,7 @@ import org.springframework.test.web.servlet.MvcResult;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -182,27 +183,46 @@ class DashboardControllerIT {
     void reportsUserScopedCommitmentAndInvestmentPercentages() throws Exception {
         String owner = register("Metrics owner", "metrics.owner@example.test");
         String other = register("Metrics other", "metrics.other@example.test");
-        long incomeCategory = categoryId(owner, "Alimenta\u00e7\u00e3o");
+        long salaryCategory = createCategory(owner, "Fictional salary", true);
+        long nonSalaryIncomeCategory = createCategory(owner, "Fictional other income", false);
         long expenseCategory = categoryId(owner, "Outros");
         long investmentCategory = categoryId(owner, "Investimentos");
 
-        createTransaction(owner, incomeCategory, "2026-07-10", "Fictional income", "300.00", "INCOME");
+        createTransaction(owner, salaryCategory, "2026-07-10", "Fictional salary", "300.00", "INCOME");
         createTransaction(owner, expenseCategory, "2026-07-11", "Fictional expense", "-100.00", "EXPENSE");
-        createTransaction(owner, expenseCategory, "2026-07-12", "Fictional income", "100.00", "INCOME");
+        createTransaction(owner, nonSalaryIncomeCategory, "2026-07-12", "Fictional income", "100.00", "INCOME");
         createTransaction(owner, investmentCategory, "2026-07-13", "Fictional investment", "50.00", "INVESTMENT");
         createTransaction(other, expenseCategory, "2026-07-14", "Other user income", "900.00", "INCOME");
+
+        mockMvc.perform(patch("/api/v1/categories/{id}", salaryCategory)
+                        .header("Authorization", "Bearer " + other).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"isSalary\":false}"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("CATEGORY_NOT_FOUND"));
 
         mockMvc.perform(get("/api/v1/dashboard").param("month", "2026-07").param("filter", "both")
                         .header("Authorization", "Bearer " + owner))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.totals.salaryCommittedPercent").value(25))
+                .andExpect(jsonPath("$.totals.salaryCommittedPercent").value(33.33))
                 .andExpect(jsonPath("$.totals.receivedInvestedPercent").value(12.5));
 
+        createTransaction(other, expenseCategory, "2026-08-10", "Other expense", "-10.00", "EXPENSE");
+
         mockMvc.perform(get("/api/v1/dashboard").param("month", "2026-08")
-                        .header("Authorization", "Bearer " + owner))
+                        .header("Authorization", "Bearer " + other))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totals.salaryCommittedPercent").value(0))
                 .andExpect(jsonPath("$.totals.receivedInvestedPercent").value(0));
+    }
+
+    private long createCategory(String token, String name, boolean isSalary) throws Exception {
+        MvcResult category = mockMvc.perform(post("/api/v1/categories").header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"%s\",\"isSalary\":%s}".formatted(name, isSalary)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.isSalary").value(isSalary))
+                .andReturn();
+        return objectMapper.readTree(category.getResponse().getContentAsString()).path("id").asLong();
     }
 
     private void createTransaction(String token, long categoryId, String date, String description, String amount, String type) throws Exception {

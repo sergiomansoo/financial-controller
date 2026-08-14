@@ -51,6 +51,6 @@ public class CategoryRuleService {
     private CategoryRuleResponse response(CategoryRule rule) {
         Category category = rule.getCategory();
         return new CategoryRuleResponse(rule.getId(), rule.getNormalizedDescription(),
-                new CategoryResponse(category.getId(), category.getName()));
+                new CategoryResponse(category.getId(), category.getName(), category.isSalary()));
     }
 }

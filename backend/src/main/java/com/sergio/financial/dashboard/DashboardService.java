@@ -44,6 +44,7 @@ public class DashboardService {
         BigDecimal income = BigDecimal.ZERO;
         BigDecimal expense = BigDecimal.ZERO;
         BigDecimal expenseCommitted = BigDecimal.ZERO;
+        BigDecimal salaryReceived = BigDecimal.ZERO;
         BigDecimal incomeReceived = BigDecimal.ZERO;
         BigDecimal receivedInvested = BigDecimal.ZERO;
         for (FinancialTransaction transaction : transactions
@@ -51,6 +52,9 @@ public class DashboardService {
                         userId, month.atDay(1), month.plusMonths(1).atDay(1))) {
             if (transaction.getType() == TransactionType.INCOME) {
                 incomeReceived = incomeReceived.add(transaction.getAmount());
+                if (transaction.getCategory().isSalary()) {
+                    salaryReceived = salaryReceived.add(transaction.getAmount());
+                }
             } else if (transaction.getType() == TransactionType.EXPENSE) {
                 expenseCommitted = expenseCommitted.add(transaction.getAmount().abs());
             } else if (transaction.getType() == TransactionType.INVESTMENT) {
@@ -68,7 +72,7 @@ public class DashboardService {
                 : null;
         return new TotalsResponse(income.subtract(expense), income, expense,
                 largest == null ? null : largest.categoryName(), largest == null ? BigDecimal.ZERO : largest.spent(),
-                percentage(expenseCommitted, incomeReceived), percentage(receivedInvested, incomeReceived));
+                percentage(expenseCommitted, salaryReceived), percentage(receivedInvested, incomeReceived));
     }
 
     private BigDecimal percentage(BigDecimal amount, BigDecimal total) {

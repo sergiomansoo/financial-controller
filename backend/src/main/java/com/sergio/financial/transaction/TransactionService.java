@@ -117,7 +117,7 @@ public class TransactionService {
         Category category = transaction.getCategory();
         return new TransactionResponse(transaction.getId(), transaction.getDate(), transaction.getHistory(),
                 transaction.getDescription(), transaction.getAmount(), transaction.getType(),
-                new CategoryResponse(category.getId(), category.getName()), transaction.isNeedsReview());
+                new CategoryResponse(category.getId(), category.getName(), category.isSalary()), transaction.isNeedsReview());
     }
 
     public record ImportedTransaction(TransactionResponse transaction, boolean duplicate) {

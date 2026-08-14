@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -28,7 +29,7 @@ public class CategoryController {
     public List<CategoryResponse> list(Authentication authentication) {
         Long userId = Long.valueOf(authentication.getName());
         return categories.findAccessibleByUserId(userId).stream()
-                .map(category -> new CategoryResponse(category.getId(), category.getName()))
+                .map(category -> new CategoryResponse(category.getId(), category.getName(), category.isSalary()))
                 .toList();
     }
 
@@ -36,6 +37,12 @@ public class CategoryController {
     @ResponseStatus(HttpStatus.CREATED)
     public CategoryResponse create(@Valid @RequestBody CategoryRequest request, Authentication authentication) {
         return service.create(Long.valueOf(authentication.getName()), request);
+    }
+
+    @PatchMapping("/{categoryId}")
+    public CategoryResponse updateSalary(@PathVariable Long categoryId, @Valid @RequestBody CategorySalaryRequest request,
+                                         Authentication authentication) {
+        return service.updateSalary(Long.valueOf(authentication.getName()), categoryId, request);
     }
 
     @DeleteMapping("/{categoryId}")

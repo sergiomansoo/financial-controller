@@ -26,8 +26,18 @@ public class CategoryService {
 
     @Transactional
     public CategoryResponse create(Long userId, CategoryRequest request) {
-        Category category = categories.save(new Category(users.getReferenceById(userId), request.name().trim()));
-        return new CategoryResponse(category.getId(), category.getName());
+        Category category = categories.save(new Category(users.getReferenceById(userId), request.name().trim(), request.isSalary()));
+        return response(category);
+    }
+
+    @Transactional
+    public CategoryResponse updateSalary(Long userId, Long categoryId, CategorySalaryRequest request) {
+        Category category = categories.findById(categoryId).orElseThrow(CategoryNotFoundException::new);
+        if (category.isSystemCategory() || category.getUser() == null || !category.getUser().getId().equals(userId)) {
+            throw new CategoryNotFoundException();
+        }
+        category.updateSalary(request.isSalary());
+        return response(category);
     }
 
     @Transactional
@@ -44,5 +54,9 @@ public class CategoryService {
             throw new CategoryInUseException();
         }
         categories.delete(category);
+    }
+
+    private CategoryResponse response(Category category) {
+        return new CategoryResponse(category.getId(), category.getName(), category.isSalary());
     }
 }
