@@ -42,6 +42,28 @@ class CategoryRuleControllerIT {
     }
 
     @Test
+    void acceptsPortugueseKeywordForAccessibleCategoryAndExplainsInvalidInput() throws Exception {
+        String token = register("Portuguese rules", "rules.portuguese@example.test");
+        long accessibleCategoryId = firstCategoryId(token);
+
+        mockMvc.perform(post("/api/v1/category-rules").header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"keyword\":\"  Café da Manhã  \",\"categoryId\":%d}".formatted(accessibleCategoryId)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.keyword").value("café da manhã"));
+
+        mockMvc.perform(post("/api/v1/category-rules").header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"keyword\":\"   \",\"categoryId\":null}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
+                .andExpect(jsonPath("$.message").value("Validation failed."))
+                .andExpect(jsonPath("$.fieldErrors.keyword").value("Informe uma palavra-chave."))
+                .andExpect(jsonPath("$.fieldErrors.categoryId").value("Selecione uma categoria."));
+    }
+
+    @Test
     void deletesOnlyTheOwnersUnusedCategoriesAndRules() throws Exception {
         String owner = register("Owner", "category.owner@example.test");
         String other = register("Other", "category.other@example.test");
