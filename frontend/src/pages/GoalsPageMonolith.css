@@ -39,9 +39,12 @@
   margin-top: 4px;
 }
 .goals-page .savings-section > .goal-row > div:first-child > p:last-of-type {
-  grid-column: 1 / -1;
-  grid-row: 4;
-  margin-top: 8px;
+  grid-column: 2;
+  grid-row: 2 / 4;
+  align-self: center;
+  max-width: 220px;
+  margin: 0;
+  text-align: right;
   color: #c4c7c8;
 }
 .goals-page .savings-section > .goal-row > div:first-child > p:last-of-type::first-line { color: #e2e2e2; }
@@ -74,7 +77,7 @@
 .goals-page .savings-section > .goal-row > div:last-of-type button:first-child { grid-column: 1 / -1; grid-row: 3; justify-self: end; }
 .goals-page .savings-section > .goal-row > div:last-of-type button:nth-of-type(2) { grid-column: 1; grid-row: 4; justify-self: end; }
 .goals-page .savings-section > .goal-row > div:last-of-type button:nth-of-type(3) { grid-column: 2; grid-row: 4; justify-self: start; }
-.goals-page .savings-section > .goal-row > div:last-of-type button.ledger-button--destructive {
+.goals-page .savings-section button[aria-label^="Excluir objetivo"] {
   position: absolute;
   top: 24px;
   right: 28px;
@@ -86,13 +89,16 @@
   color: #ffb4ab;
   font-size: 12px;
 }
-.goals-page .savings-section > .goal-row > div:last-of-type button.ledger-button--destructive:hover { background: rgb(255 180 171 / 10%); }
+.goals-page .savings-section button[aria-label^="Excluir objetivo"]:hover { background: rgb(255 180 171 / 10%); }
+.goals-page .savings-section > .goal-row > div:last-of-type button:first-child { grid-column: 2; grid-row: 2; justify-self: end; }
+.goals-page .savings-section > .goal-row > div:last-of-type button:nth-of-type(2) { grid-column: 1; grid-row: 2; justify-self: start; }
 .goals-page .savings-section > .goal-row > div:last-of-type label:nth-of-type(1) { grid-column: 1; grid-row: 1; }
 .goals-page .savings-section > .goal-row > div:last-of-type label:nth-of-type(2) { grid-column: 2; grid-row: 1; }
 @media(max-width:767px){
   .goals-page .savings-section > .goal-row { padding: 20px; }
   .goals-page .savings-section > .goal-row > div:first-child { grid-template-columns: 1fr; }
-  .goals-page .savings-section > .goal-row > div:last-of-type button.ledger-button--destructive { top: 18px; right: 20px; }
+  .goals-page .savings-section button[aria-label^="Excluir objetivo"] { top: 18px; right: 20px; }
+  .goals-page .savings-section > .goal-row > div:first-child > p:last-of-type { grid-column: 1; grid-row: 4; max-width: none; text-align: left; }
   .goals-page .savings-section > .goal-row > div:last-of-type { grid-template-columns: 1fr; }
   .goals-page .savings-section > .goal-row > div:last-of-type label:nth-of-type(1), .goals-page .savings-section > .goal-row > div:last-of-type label:nth-of-type(2), .goals-page .savings-section > .goal-row > div:last-of-type button:first-child, .goals-page .savings-section > .goal-row > div:last-of-type button:nth-of-type(2), .goals-page .savings-section > .goal-row > div:last-of-type button:nth-of-type(3) { grid-column: 1; justify-self: stretch; }
 }
