@@ -50,7 +50,7 @@ class CategoryRuleControllerIT {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"keyword\":\"  Café da Manhã  \",\"categoryId\":%d}".formatted(accessibleCategoryId)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.keyword").value("café da manhã"));
+                .andExpect(jsonPath("$.keyword").value("cafe da manha"));
 
         mockMvc.perform(post("/api/v1/category-rules").header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -68,7 +68,7 @@ class CategoryRuleControllerIT {
         String owner = register("Rule apply owner", "rule.apply.owner@example.test");
         long otherCategoryId = createCategory(owner, "Before reclassification");
         long targetCategoryId = createCategory(owner, "After reclassification");
-        long ruleId = createRule(owner, targetCategoryId, "Caf\u00e9");
+        long ruleId = createRule(owner, targetCategoryId, "Cafe");
         createTransaction(owner, otherCategoryId, "CAF\u00c9 da manh\u00e3", "2026-08-10");
         createTransaction(owner, otherCategoryId, "Meu caf\u00e9", "2026-08-11");
         createTransaction(owner, targetCategoryId, "Caf\u00e9 j\u00e1 correto", "2026-08-12");

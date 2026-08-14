@@ -133,11 +133,11 @@ public class TransactionService {
 
     private TransactionType typeFor(String history) {
         String normalized = categorization.normalize(history);
-        if (normalized.contains("aplica\u00e7\u00e3o") || normalized.contains("resgate") || normalized.contains("cdb")) {
+        if (normalized.contains("aplicacao") || normalized.contains("resgate") || normalized.contains("cdb")) {
             return TransactionType.INVESTMENT;
         }
         if (normalized.contains("recebido") || normalized.contains("recebimento")
-                || normalized.contains("cr\u00e9dito") || normalized.contains("credito") || normalized.contains("rendimento")) {
+                || normalized.contains("credito") || normalized.contains("rendimento")) {
             return TransactionType.INCOME;
         }
         return TransactionType.EXPENSE;

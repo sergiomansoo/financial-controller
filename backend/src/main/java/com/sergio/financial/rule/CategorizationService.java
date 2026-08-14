@@ -30,7 +30,8 @@ public class CategorizationService {
     }
 
     public String normalize(String value) {
-        return Normalizer.normalize(value, Normalizer.Form.NFKC)
+        return Normalizer.normalize(value, Normalizer.Form.NFKD)
+                .replaceAll("\\p{M}+", "")
                 .trim()
                 .replaceAll("\\s+", " ")
                 .toLowerCase(Locale.ROOT);
@@ -40,11 +41,11 @@ public class CategorizationService {
         String name;
         if (containsAny(description, "padaria", "lanches", "restaurante", "ifood")) {
             name = "Alimenta\u00e7\u00e3o";
-        } else if (containsAny(description, "99", "uber", "combust\u00edvel")) {
+        } else if (containsAny(description, "99", "uber", "combustivel")) {
             name = "Transporte";
         } else if (containsAny(description, "distribuidora", "mercado")) {
             name = "Mercado/Compras";
-        } else if (containsAny(description, "cdb", "aplica\u00e7\u00e3o", "resgate")) {
+        } else if (containsAny(description, "cdb", "aplicacao", "resgate")) {
             name = "Investimentos";
         } else {
             name = "Outros";
