@@ -10,7 +10,7 @@ import type {
   ManualTransactionInput,
   RegistrationDetails,
   Transaction,
-  TransactionPage, TransactionQuery, ImportPreview, CategoryRule, SavingsGoal, SavingsGoalInput,
+  TransactionPage, TransactionQuery, TransactionTotal, TransactionTotalQuery, ImportPreview, CategoryRule, SavingsGoal, SavingsGoalInput,
 } from '../types/api'
 
 const apiUrl = (import.meta.env.VITE_API_URL ?? 'http://localhost:8080/api/v1').replace(
@@ -80,6 +80,7 @@ export function getTransactions(month: string) {
   return request<Transaction[]>(`/transactions?month=${encodeURIComponent(month)}`)
 }
 export function getTransactionPage(query: TransactionQuery) { const params = new URLSearchParams(Object.entries(query).filter(([, value]) => value !== undefined).map(([key, value]) => [key, String(value)])); return request<TransactionPage>(`/transactions?${params}`) }
+export function getTransactionTotal(query: TransactionTotalQuery) { const params = new URLSearchParams(Object.entries(query).filter(([, value]) => value !== undefined).map(([key, value]) => [key, String(value)])); return request<TransactionTotal>(`/transactions/total?${params}`) }
 export function previewStatement(file: File) { const body = new FormData(); body.append('file', file); return request<ImportPreview>('/imports/preview', { method: 'POST', body }) }
 export function createCategory(name: string) { return request<Category>('/categories', { method: 'POST', body: JSON.stringify({ name }) }) }
 export function deleteCategory(id: string | number) { return request<void>(`/categories/${id}`, { method: 'DELETE' }) }
