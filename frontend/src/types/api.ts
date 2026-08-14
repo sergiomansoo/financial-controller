@@ -59,6 +59,7 @@ export interface TransactionTotalQuery { month?: string; from?: string; to?: str
 export interface ImportPreviewRow { date: string; history: string; description: string | null; amount: number; type: string; duplicate: boolean }
 export interface ImportPreview { rows: ImportPreviewRow[]; previewCount: number; duplicateCount: number }
 export interface CategoryRule { id: string | number; keyword: string; category: Category }
+export interface CategoryRuleApplyResponse { changedCount: number }
 export type TransactionType = 'EXPENSE' | 'INCOME' | 'INVESTMENT'
 export interface ManualTransactionInput { date: string; description: string; amount: number; categoryId: string | number; type: TransactionType }
 export interface SavingsGoal { id: string | number; name: string; targetAmount: number; targetDate: string | null; month: string; plannedAmount: number; savedAmount: number; progressPercent: number; overallSavedAmount: number; overallProgressPercent: number }

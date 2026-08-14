@@ -10,7 +10,7 @@ import type {
   ManualTransactionInput,
   RegistrationDetails,
   Transaction,
-  TransactionPage, TransactionQuery, TransactionTotal, TransactionTotalQuery, ImportPreview, CategoryRule, SavingsGoal, SavingsGoalInput,
+  TransactionPage, TransactionQuery, TransactionTotal, TransactionTotalQuery, ImportPreview, CategoryRule, CategoryRuleApplyResponse, SavingsGoal, SavingsGoalInput,
 } from '../types/api'
 
 const apiUrl = (import.meta.env.VITE_API_URL ?? 'http://localhost:8080/api/v1').replace(
@@ -87,6 +87,7 @@ export function deleteCategory(id: string | number) { return request<void>(`/cat
 export function getCategoryRules() { return request<CategoryRule[]>('/category-rules') }
 export function createCategoryRule(keyword: string, categoryId: string | number) { return request<CategoryRule>('/category-rules', { method: 'POST', body: JSON.stringify({ keyword, categoryId }) }) }
 export function deleteCategoryRule(id: string | number) { return request<void>(`/category-rules/${id}`, { method: 'DELETE' }) }
+export function applyCategoryRule(id: string | number) { return request<CategoryRuleApplyResponse>(`/category-rules/${id}/apply`, { method: 'POST' }) }
 
 export function getCategories() {
   return request<Category[]>('/categories')
