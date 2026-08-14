@@ -13,6 +13,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.nullValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -177,6 +178,45 @@ class DashboardControllerIT {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.spent").value(100))
                 .andExpect(jsonPath("$.exceeded").value(false));
+    }
+
+    @Test
+    void returnsIndependentStructuredHighlightsForEachDashboardFilter() throws Exception {
+        String owner = register("Highlight owner", "highlights.owner@example.test");
+        String other = register("Highlight other", "highlights.other@example.test");
+        long foodCategory = categoryId(owner, "Alimenta\u00e7\u00e3o");
+        long otherCategory = categoryId(owner, "Outros");
+        long investmentCategory = categoryId(owner, "Investimentos");
+
+        createTransaction(owner, foodCategory, "2026-07-10", "Fictional small income", "100.00", "INCOME");
+        createTransaction(owner, otherCategory, "2026-07-11", "Fictional largest income", "300.00", "INCOME");
+        createTransaction(owner, foodCategory, "2026-07-12", "Fictional small expense", "-25.00", "EXPENSE");
+        createTransaction(owner, otherCategory, "2026-07-13", "Fictional largest expense", "-100.00", "EXPENSE");
+        createTransaction(owner, investmentCategory, "2026-07-14", "Fictional investment", "1000.00", "INVESTMENT");
+        createTransaction(other, foodCategory, "2026-07-15", "Other user income", "999.00", "INCOME");
+        createTransaction(other, foodCategory, "2026-07-16", "Other user expense", "-999.00", "EXPENSE");
+
+        mockMvc.perform(get("/api/v1/dashboard").param("month", "2026-07").param("filter", "income")
+                        .header("Authorization", "Bearer " + owner))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totals.largestExpense").value(nullValue()))
+                .andExpect(jsonPath("$.totals.largestIncome.categoryName").value("Outros"))
+                .andExpect(jsonPath("$.totals.largestIncome.amount").value(300));
+
+        mockMvc.perform(get("/api/v1/dashboard").param("month", "2026-07").param("filter", "expense")
+                        .header("Authorization", "Bearer " + owner))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totals.largestExpense.categoryName").value("Outros"))
+                .andExpect(jsonPath("$.totals.largestExpense.amount").value(100))
+                .andExpect(jsonPath("$.totals.largestIncome").value(nullValue()))
+                .andExpect(jsonPath("$.totals.largestExpenseCategory").value("Outros"))
+                .andExpect(jsonPath("$.totals.largestExpenseAmount").value(100));
+
+        mockMvc.perform(get("/api/v1/dashboard").param("month", "2026-07").param("filter", "both")
+                        .header("Authorization", "Bearer " + owner))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totals.largestExpense.categoryName").value("Outros"))
+                .andExpect(jsonPath("$.totals.largestIncome.categoryName").value("Outros"));
     }
 
     @Test

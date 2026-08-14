@@ -70,8 +70,18 @@ public class DashboardService {
         CategoryExpense largest = filter.includes(TransactionType.EXPENSE)
                 ? expenses.stream().max(java.util.Comparator.comparing(CategoryExpense::spent)).orElse(null)
                 : null;
+        CategoryHighlight largestExpense = largest == null ? null
+                : new CategoryHighlight(largest.categoryId(), largest.categoryName(), largest.spent());
+        CategoryHighlight largestIncome = filter.includes(TransactionType.INCOME)
+                ? transactions.sumByCategory(userId, month.atDay(1), month.plusMonths(1).atDay(1), TransactionType.INCOME)
+                .stream()
+                .findFirst()
+                .map(category -> new CategoryHighlight(category.categoryId(), category.categoryName(), category.spent()))
+                .orElse(null)
+                : null;
         return new TotalsResponse(income.subtract(expense), income, expense,
                 largest == null ? null : largest.categoryName(), largest == null ? BigDecimal.ZERO : largest.spent(),
+                largestExpense, largestIncome,
                 percentage(expenseCommitted, salaryReceived), percentage(receivedInvested, incomeReceived));
     }
 
@@ -110,6 +120,9 @@ public class DashboardService {
     public record CategorySpend(Long categoryId, String categoryName, BigDecimal spent) {
     }
 
+    public record CategoryHighlight(Long categoryId, String categoryName, BigDecimal amount) {
+    }
+
     public record MonthlyEvolution(String month, BigDecimal income, BigDecimal expense) {
     }
 
@@ -117,7 +130,8 @@ public class DashboardService {
     }
 
     public record TotalsResponse(BigDecimal balance, BigDecimal income, BigDecimal expense, String largestExpenseCategory,
-                                 BigDecimal largestExpenseAmount, BigDecimal salaryCommittedPercent,
+                                 BigDecimal largestExpenseAmount, CategoryHighlight largestExpense,
+                                 CategoryHighlight largestIncome, BigDecimal salaryCommittedPercent,
                                  BigDecimal receivedInvestedPercent) {
     }
 
