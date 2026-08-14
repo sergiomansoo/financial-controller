@@ -49,7 +49,8 @@ export interface Transaction {
 export interface Budget { categoryId: string | number; categoryName: string; limit: number; spent: number; exceeded: boolean }
 export interface CategorySpending { categoryId: string | number; categoryName: string; spent: number }
 export interface MonthlyEvolution { month: string; income: number; expense: number }
-export interface DashboardTotals { income: number; expense: number; balance: number; largestExpenseCategory?: string; largestExpenseAmount?: number; salaryCommittedPercent?: number; receivedInvestedPercent?: number }
+export interface DashboardHighlight { categoryId: string | number; categoryName: string; amount: number }
+export interface DashboardTotals { income: number; expense: number; balance: number; largestIncome?: DashboardHighlight; largestExpense?: DashboardHighlight; largestExpenseCategory?: string; largestExpenseAmount?: number; salaryCommittedPercent?: number; receivedInvestedPercent?: number }
 export interface DashboardData { totals?: DashboardTotals; byCategory: CategorySpending[]; monthlyEvolution: MonthlyEvolution[]; budgets: Budget[] }
 export interface TransactionPage { content: Transaction[]; page: number; size: number; totalElements: number; totalPages: number }
 export interface TransactionQuery { month: string; type?: 'INCOME' | 'EXPENSE'; categoryId?: string; from?: string; to?: string; page?: number; size?: number }
