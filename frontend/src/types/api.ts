@@ -34,6 +34,7 @@ export interface ImportResponse {
   duplicateCount: number
   transactions: Transaction[]
 }
+export interface ImportHistoryItem { originalFilename: string; importedAt: string; rowCount: number }
 
 export interface Transaction {
   id: string | number

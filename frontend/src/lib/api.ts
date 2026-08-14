@@ -10,7 +10,7 @@ import type {
   ManualTransactionInput,
   RegistrationDetails,
   Transaction,
-  TransactionPage, TransactionQuery, TransactionTotal, TransactionTotalQuery, ImportPreview, CategoryRule, CategoryRuleApplyResponse, SavingsGoal, SavingsGoalInput,
+  TransactionPage, TransactionQuery, TransactionTotal, TransactionTotalQuery, ImportPreview, ImportHistoryItem, CategoryRule, CategoryRuleApplyResponse, SavingsGoal, SavingsGoalInput,
 } from '../types/api'
 
 const apiUrl = (import.meta.env.VITE_API_URL ?? 'http://localhost:8080/api/v1').replace(
@@ -75,6 +75,7 @@ export function uploadStatement(file: File) {
 
   return request<ImportResponse>('/imports', { method: 'POST', body: formData })
 }
+export function getImports() { return request<ImportHistoryItem[]>('/imports') }
 
 export function getTransactions(month: string) {
   return request<Transaction[]>(`/transactions?month=${encodeURIComponent(month)}`)
