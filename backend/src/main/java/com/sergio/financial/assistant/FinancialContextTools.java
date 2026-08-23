@@ -35,31 +35,31 @@ public class FinancialContextTools {
         this.objectMapper = objectMapper;
     }
 
-    public JsonNode execute(Long userId, String name, JsonNode arguments) {
-        if (userId == null || name == null) {
+    public JsonNode execute(Long userId, YearMonth selectedMonth, String name, JsonNode arguments) {
+        if (userId == null || selectedMonth == null || name == null) {
             throw new AiUnavailableException();
         }
         return switch (name) {
-            case "get_monthly_dashboard" -> monthlyDashboard(userId, arguments);
-            case "get_monthly_budgets" -> monthlyBudgets(userId, arguments);
-            case "list_month_transactions" -> monthTransactions(userId, arguments);
-            case "compare_monthly_totals" -> compareMonthlyTotals(userId, arguments);
+            case "get_monthly_dashboard" -> monthlyDashboard(userId, selectedMonth, arguments);
+            case "get_monthly_budgets" -> monthlyBudgets(userId, selectedMonth, arguments);
+            case "list_month_transactions" -> monthTransactions(userId, selectedMonth, arguments);
+            case "compare_monthly_totals" -> compareMonthlyTotals(userId, selectedMonth, arguments);
             default -> throw new AiUnavailableException();
         };
     }
 
-    private JsonNode monthlyDashboard(Long userId, JsonNode arguments) {
-        YearMonth month = month(arguments, Set.of("month"));
+    private JsonNode monthlyDashboard(Long userId, YearMonth selectedMonth, JsonNode arguments) {
+        YearMonth month = month(arguments, Set.of("month"), selectedMonth);
         return objectMapper.valueToTree(dashboards.dashboard(userId, month));
     }
 
-    private JsonNode monthlyBudgets(Long userId, JsonNode arguments) {
-        YearMonth month = month(arguments, Set.of("month"));
+    private JsonNode monthlyBudgets(Long userId, YearMonth selectedMonth, JsonNode arguments) {
+        YearMonth month = month(arguments, Set.of("month"), selectedMonth);
         return objectMapper.valueToTree(budgets.list(userId, month));
     }
 
-    private JsonNode monthTransactions(Long userId, JsonNode arguments) {
-        YearMonth month = month(arguments, Set.of("month", "limit"));
+    private JsonNode monthTransactions(Long userId, YearMonth selectedMonth, JsonNode arguments) {
+        YearMonth month = month(arguments, Set.of("month", "limit"), selectedMonth);
         JsonNode requestedLimit = arguments.get("limit");
         if (requestedLimit == null || !requestedLimit.isIntegralNumber()) {
             throw new AiUnavailableException();
@@ -74,8 +74,8 @@ public class FinancialContextTools {
         return objectMapper.valueToTree(result);
     }
 
-    private JsonNode compareMonthlyTotals(Long userId, JsonNode arguments) {
-        YearMonth month = month(arguments, Set.of("month"));
+    private JsonNode compareMonthlyTotals(Long userId, YearMonth selectedMonth, JsonNode arguments) {
+        YearMonth month = month(arguments, Set.of("month"), selectedMonth);
         YearMonth previousMonth = month.minusMonths(1);
         DashboardService.DashboardResponse currentDashboard = dashboards.dashboard(userId, month);
         DashboardService.DashboardResponse previousDashboard = dashboards.dashboard(userId, previousMonth);
@@ -102,7 +102,7 @@ public class FinancialContextTools {
                 transaction.type(), category);
     }
 
-    private YearMonth month(JsonNode arguments, Set<String> allowedFields) {
+    private YearMonth month(JsonNode arguments, Set<String> allowedFields, YearMonth selectedMonth) {
         if (arguments == null || !arguments.isObject()) {
             throw new AiUnavailableException();
         }
@@ -117,7 +117,11 @@ public class FinancialContextTools {
             throw new AiUnavailableException();
         }
         try {
-            return YearMonth.parse(month.textValue());
+            YearMonth requestedMonth = YearMonth.parse(month.textValue());
+            if (!selectedMonth.equals(requestedMonth)) {
+                throw new AiUnavailableException();
+            }
+            return requestedMonth;
         } catch (DateTimeParseException exception) {
             throw new AiUnavailableException();
         }

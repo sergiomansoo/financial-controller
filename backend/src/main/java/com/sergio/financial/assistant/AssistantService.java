@@ -37,6 +37,7 @@ public class AssistantService {
     public String answer(Long userId, AssistantChatRequest request) {
         List<ObjectNode> messages = initialMessages(request);
         int toolCallCount = 0;
+        boolean transactionListUsed = false;
 
         for (int requestNumber = 1; requestNumber <= MAX_GROQ_REQUESTS; requestNumber++) {
             ObjectNode response = groqClient.complete(List.copyOf(messages), toolSchemas.deepCopy());
@@ -62,7 +63,9 @@ public class AssistantService {
                         if (toolCallCount >= MAX_TOOL_CALLS) {
                             throw new AiUnavailableException();
                         }
-                        executeTool(userId, toolCall, messages);
+                        boolean listedTransactions = executeTool(userId, request.month(), toolCall, messages,
+                                transactionListUsed);
+                        transactionListUsed = transactionListUsed || listedTransactions;
                         toolCallCount++;
                     }
                     continue;
@@ -78,7 +81,8 @@ public class AssistantService {
         throw new AiUnavailableException();
     }
 
-    private void executeTool(Long userId, JsonNode toolCall, List<ObjectNode> messages) {
+    private boolean executeTool(Long userId, java.time.YearMonth selectedMonth, JsonNode toolCall,
+                                List<ObjectNode> messages, boolean transactionListUsed) {
         if (toolCall == null || !toolCall.isObject()) {
             throw new AiUnavailableException();
         }
@@ -91,18 +95,23 @@ public class AssistantService {
             throw new AiUnavailableException();
         }
         String name = requiredText(function.get("name"));
+        boolean listsTransactions = "list_month_transactions".equals(name);
+        if (listsTransactions && transactionListUsed) {
+            throw new AiUnavailableException();
+        }
         String rawArguments = requiredText(function.get("arguments"));
         try {
             JsonNode arguments = objectMapper.readTree(rawArguments);
             if (!arguments.isObject()) {
                 throw new AiUnavailableException();
             }
-            JsonNode result = contextTools.execute(userId, name, arguments);
+            JsonNode result = contextTools.execute(userId, selectedMonth, name, arguments);
             ObjectNode toolMessage = objectMapper.createObjectNode();
             toolMessage.put("role", "tool");
             toolMessage.put("tool_call_id", id);
             toolMessage.put("content", objectMapper.writeValueAsString(result));
             messages.add(toolMessage);
+            return listsTransactions;
         } catch (AiUnavailableException exception) {
             throw exception;
         } catch (JsonProcessingException exception) {

@@ -85,6 +85,35 @@ class AssistantServiceTest {
     }
 
     @Test
+    void rejectsAToolRequestForAMonthOtherThanTheSelectedMonth() {
+        when(groqClient.complete(any(), any()))
+                .thenReturn(toolCall("call-1", "get_monthly_dashboard", "{\"month\":\"2026-07\"}"));
+
+        assertThatThrownBy(() -> service.answer(42L, request("Analise agosto", "2026-08")))
+                .isInstanceOf(AiUnavailableException.class)
+                .hasNoCause();
+
+        verifyNoInteractions(transactionService, budgetService, dashboardService);
+    }
+
+    @Test
+    void allowsTransactionListingOnlyOncePerAnswer() {
+        when(groqClient.complete(any(), any()))
+                .thenReturn(toolCall("call-1", "list_month_transactions",
+                        "{\"month\":\"2026-08\",\"limit\":50}"))
+                .thenReturn(toolCall("call-2", "list_month_transactions",
+                        "{\"month\":\"2026-08\",\"limit\":50}"));
+        when(transactionService.list(42L, YearMonth.of(2026, 8))).thenReturn(List.of());
+
+        assertThatThrownBy(() -> service.answer(42L, request("Liste novamente", "2026-08")))
+                .isInstanceOf(AiUnavailableException.class)
+                .hasNoCause();
+
+        verify(transactionService).list(42L, YearMonth.of(2026, 8));
+        verify(groqClient, times(2)).complete(any(), any());
+    }
+
+    @Test
     void rejectsAnUnknownToolWithoutExecutingIt() {
         when(groqClient.complete(any(), any())).thenReturn(toolCall("call-1", "drop_database", "{}"));
 
@@ -205,7 +234,7 @@ class AssistantServiceTest {
                 .toList();
         when(transactionService.list(42L, YearMonth.of(2026, 8))).thenReturn(transactions);
 
-        JsonNode result = contextTools.execute(42L, "list_month_transactions",
+        JsonNode result = contextTools.execute(42L, YearMonth.of(2026, 8), "list_month_transactions",
                 objectMapper.createObjectNode().put("month", "2026-08").put("limit", 500));
 
         assertThat(result).hasSize(50);
@@ -219,7 +248,8 @@ class AssistantServiceTest {
     void rejectsToolSuppliedIdentityAndOtherUnexpectedArguments() {
         ObjectNode arguments = objectMapper.createObjectNode().put("month", "2026-08").put("userId", 99L);
 
-        assertThatThrownBy(() -> contextTools.execute(42L, "get_monthly_dashboard", arguments))
+        assertThatThrownBy(() -> contextTools.execute(
+                42L, YearMonth.of(2026, 8), "get_monthly_dashboard", arguments))
                 .isInstanceOf(AiUnavailableException.class);
 
         verify(dashboardService, never()).dashboard(any(), any());
