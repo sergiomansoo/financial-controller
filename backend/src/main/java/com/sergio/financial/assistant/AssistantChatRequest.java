@@ -1,7 +1,14 @@
 package com.sergio.financial.assistant;
 
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import java.time.YearMonth;
 import java.util.List;
 
-public record AssistantChatRequest(String message, YearMonth month, List<AssistantHistoryMessage> history) {
+public record AssistantChatRequest(
+        @NotBlank @Size(max = 1000) String message,
+        @NotNull YearMonth month,
+        @NotNull @Valid @Size(max = 10) List<AssistantHistoryMessage> history) {
 }
