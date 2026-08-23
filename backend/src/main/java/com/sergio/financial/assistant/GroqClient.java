@@ -18,6 +18,8 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class GroqClient {
+    private static final String MODEL = "openai/gpt-oss-20b";
+
     private final GroqProperties properties;
     private final ObjectMapper objectMapper;
     private final HttpClient httpClient;
@@ -37,7 +39,7 @@ public class GroqClient {
         validateConfiguration();
         try {
             ObjectNode payload = objectMapper.createObjectNode();
-            payload.put("model", properties.model());
+            payload.put("model", MODEL);
             payload.set("messages", objectMapper.valueToTree(messages));
             payload.set("tools", tools);
             payload.put("tool_choice", "auto");
@@ -68,17 +70,16 @@ public class GroqClient {
             throw exception;
         } catch (InterruptedException exception) {
             Thread.currentThread().interrupt();
-            throw new AiUnavailableException(exception);
+            throw new AiUnavailableException();
         } catch (JsonProcessingException exception) {
             throw new AiUnavailableException();
         } catch (IOException | IllegalArgumentException exception) {
-            throw new AiUnavailableException(exception);
+            throw new AiUnavailableException();
         }
     }
 
     private void validateConfiguration() {
         if (properties == null || properties.apiKey() == null || properties.apiKey().isBlank()
-                || properties.model() == null || properties.model().isBlank()
                 || properties.baseUrl() == null || properties.timeout() == null
                 || properties.timeout().isZero() || properties.timeout().isNegative()) {
             throw new AiUnavailableException();

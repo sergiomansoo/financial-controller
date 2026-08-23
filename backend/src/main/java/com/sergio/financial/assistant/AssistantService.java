@@ -43,6 +43,9 @@ public class AssistantService {
             if (response == null) {
                 throw new AiUnavailableException();
             }
+            if (!"assistant".equals(response.path("role").asText())) {
+                throw new AiUnavailableException();
+            }
             JsonNode toolCalls = response.get("tool_calls");
             if (toolCalls != null && !toolCalls.isNull()) {
                 if (!toolCalls.isArray()) {
@@ -77,6 +80,9 @@ public class AssistantService {
 
     private void executeTool(Long userId, JsonNode toolCall, List<ObjectNode> messages) {
         if (toolCall == null || !toolCall.isObject()) {
+            throw new AiUnavailableException();
+        }
+        if (!"function".equals(requiredText(toolCall.get("type")))) {
             throw new AiUnavailableException();
         }
         String id = requiredText(toolCall.get("id"));
