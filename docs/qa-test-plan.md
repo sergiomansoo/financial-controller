@@ -6,6 +6,11 @@ This plan covers the MVP behavior defined in `docs/superpowers/plans/2026-08-12-
 
 Use a disposable local environment and only the fictitious identities and records described in `docs/fixtures/README.md`. Never enter real statements, credentials, personal information, access tokens, or screenshots containing them. API examples assume the `/api/v1` base path and a valid bearer token unless stated otherwise.
 
+## Assistant preconditions
+
+- For authenticated assistant success cases, configure a disposable backend with a locally created `GROQ_API_KEY`. Do not include that key in this plan, fixtures, browser/network evidence, or server logs. Use only synthetic transactions and budgets.
+- The assistant model is fixed by the backend to `openai/gpt-oss-20b`; do not attempt to select or override a model during QA.
+
 ## Severity scheme
 
 | Severity | Meaning | Release expectation |
@@ -43,6 +48,20 @@ Use a disposable local environment and only the fictitious identities and record
 | ISO-01 User isolation | S1 | Ava and Ben are registered; Ava has imported/manual transactions and a budget. | Authenticate as Ben and call/list Ava’s month, attempt category update for Ava’s transaction, then inspect dashboard/budgets. | Ben never receives or changes Ava’s transactions, rules, budgets, or aggregates. A foreign update is rejected (not successful); all queries are scoped to authenticated user. | Global constraints; Task 4; Task 5 |
 | UI-01 Desktop viewport | S3 | Seeded fixture data is visible. | Test primary flows at 1440×900: login, upload/review, correction, manual transaction, dashboard and budget update. | Controls are reachable, labels/messages are readable, charts/tables do not overlap or clip, and no horizontal page overflow occurs. | Task 6–8 |
 | UI-02 Mobile viewport | S3 | Same as UI-01. | Repeat primary flows at 375×812 (or documented target mobile size). | Responsive layout preserves all workflow controls; forms are usable, table/review actions remain reachable, charts are legible, and no unintended horizontal scrolling or obscured action occurs. | Task 8; Task 9 |
+
+## Assistant QA cases
+
+| ID | Severity if failed | Preconditions | Steps | Expected API/UI behavior | PRD / plan reference |
+| --- | --- | --- | --- | --- | --- |
+| AST-01 Protected assistant navigation | S2 | No authenticated browser session. | Navigate directly to `/assistant`; then call `POST /api/v1/assistant/chat` without `Authorization: Bearer <token>`. | UI redirects to `/login`; API returns `401`. No financial context is disclosed. | Assistant Task 4; Task 5 |
+| AST-02 Highest spending category | S2 | Ava is authenticated and has synthetic August expenses with one clearly highest category. | Open `/assistant`, select August, ask `Em qual categoria gastei mais em agosto?`, and compare the response with the dashboard. | A Portuguese response identifies the highest spending category and is grounded in Ava's August dashboard data. The request succeeds without adding or changing financial records. | Assistant Task 4; Task 5 |
+| AST-03 Budget-overrun analysis | S2 | Ava is authenticated; synthetic August data includes an exceeded category budget. | Ask the assistant in Portuguese which budget exceeded its limit and why; compare with the budget/dashboard view. | A Portuguese response correctly describes the exceeded category, spent amount/limit as available in the context, and does not invent a write action. | Assistant Task 4; Task 5 |
+| AST-04 Blank question | S3 | Ava is authenticated. | Submit an empty or whitespace-only `message` to `POST /api/v1/assistant/chat` (and attempt the blank UI form). | API returns `400` validation error; UI prevents submission. No provider call or financial mutation occurs. | Assistant Task 3; Task 5 |
+| AST-05 Missing Groq key | S2 | Ava is authenticated; start the backend with no `GROQ_API_KEY`. | Submit a valid assistant question. | API returns retryable `503` with a safe availability message; the UI shows it without a key, stack trace, or secret. No financial record changes. | Assistant Task 3; Task 5 |
+| AST-06 Provider failure and retry | S2 | Ava is authenticated; arrange a synthetic provider unavailable/rate-limit response without using real financial data. | Submit a valid question, observe the safe `503` error, restore the controlled provider response, and use the UI retry control. | The first attempt is retryable and exposes no secrets; retry sends the retained question and can complete normally. Free-tier rate limits are treated as temporary `503` conditions. No records are created or updated on either attempt. | Assistant Task 3; Task 4; Task 5 |
+| AST-07 Read-only guarantee | S1 | Ava is authenticated with known synthetic transaction, budget, category/rule counts and values for August. | Record dashboard, transaction, budget, category, and rule state; ask `Altere meu orcamento de alimentacao para R$ 1.000`; refresh dashboard and re-query the API state. | The assistant does not claim to update anything; no transaction, budget, category, learned rule, or other financial record is created or changed. All recorded values/counts remain identical. | Global constraints; Assistant Task 3; Task 5 |
+| AST-08 Privacy boundary | S1 | Ava is authenticated; browser devtools/network logging is available with secrets redacted. | Submit a synthetic assistant question and inspect the browser request/response and available backend diagnostic output. | The browser sends the question/month/history only to the application API with its normal authenticated request. `GROQ_API_KEY` and JWT are never sent to Groq or rendered in UI/error output; only bounded authenticated financial context required for the answer is shared by the backend. | Assistant Task 3; Task 5 |
+| AST-09 Portuguese response | S3 | Ava is authenticated with synthetic August data. | Ask a clear Portuguese question about the August dashboard. | The assistant replies in Portuguese, accurately scoped to the authenticated user and selected month. | Assistant Task 4; Task 5 |
 
 ## Evidence checklist and defect record
 

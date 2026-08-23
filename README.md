@@ -99,6 +99,24 @@ O backend não possui credenciais de produção embutidas. Estas variáveis são
 
 Para outro ambiente, substitua todas as credenciais de exemplo e configure `CORS_ALLOWED_ORIGIN` com a origem pública exata do frontend.
 
+### Assistente financeiro (Groq)
+
+O assistente usa permanentemente o modelo `openai/gpt-oss-20b`. Esse modelo e definido pelo backend e nao deve ser alterado por variavel de ambiente.
+
+Para executar a API localmente com o assistente, defina uma chave criada para o seu ambiente no console da Groq no mesmo terminal do backend. Nao copie uma chave real para arquivos, commits, capturas de tela ou evidencias de QA.
+
+```powershell
+# backend local somente; nao versione este valor
+$env:GROQ_API_KEY='cole-a-chave-gerada-no-console-groq'
+.\mvnw.cmd spring-boot:run
+```
+
+No Render, cadastre `GROQ_API_KEY` como variavel de ambiente secreta do **servico de backend**. Nunca a cadastre no ambiente estatico do frontend nem como variavel `VITE_*`, pois valores expostos ao frontend podem ser vistos no navegador. Mantenha tambem as demais credenciais do backend (banco e JWT) como segredos do servico correspondente.
+
+O assistente esta disponivel em `POST /api/v1/assistant/chat` e exige JWT. Para responder a pergunta, o backend envia a Groq somente o contexto financeiro autenticado e limitado que for necessario para a analise do mes selecionado, junto do historico recente da conversa. Ele nao recebe senhas, JWTs ou a chave da Groq e nao cria nem altera transacoes, categorias, regras ou orcamentos. Evite inserir informacoes sensiveis que nao sejam necessarias para a sua pergunta financeira.
+
+Quando a chave nao esta configurada, a Groq esta indisponivel ou o plano gratuito aplica limite de taxa, a API pode responder `503`. Essa e uma condicao temporaria: mantenha a pergunta e tente novamente mais tarde; nunca exponha ou registre o valor da chave para investigar o problema.
+
 ## Formato do CSV Banco Inter
 
 O importador aceita arquivo UTF-8 delimitado por ponto e vírgula com quatro linhas de metadados, uma linha em branco e o cabeçalho abaixo:
@@ -139,6 +157,8 @@ Todas as rotas, exceto autenticação, exigem `Authorization: Bearer <token>`.
 | `GET` | `/api/v1/budgets?month=YYYY-MM` | Lista orçamentos do mês. |
 | `PUT` | `/api/v1/budgets/{categoryId}?month=YYYY-MM` | Cria ou atualiza orçamento com `{ "limit": 500.00 }`. |
 | `GET` | `/api/v1/dashboard?month=YYYY-MM` | Retorna gastos por categoria, série mensal e orçamentos. |
+
+O endpoint `POST /api/v1/assistant/chat` responde perguntas sobre o contexto financeiro do usuario autenticado e nao altera registros.
 
 Erros seguem o formato:
 
