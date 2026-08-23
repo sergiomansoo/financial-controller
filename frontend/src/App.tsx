@@ -3,6 +3,7 @@ import { BrowserRouter, Navigate, Outlet, Route, Routes } from 'react-router-dom
 import { AppLayout } from './components/AppLayout'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { AuthProvider } from './lib/auth'
+import { AssistantPage } from './pages/AssistantPage'
 import { MovementFilterProvider } from './lib/movement-filter'
 import { DashboardPage } from './pages/DashboardPage'
 import { LoginPage } from './pages/LoginPage'
@@ -27,6 +28,7 @@ function App() {
               <Route path="/categorias" element={<CategoriesPage />} />
               <Route path="/metas" element={<GoalsPage />} />
               <Route path="/configuracoes" element={<SettingsPage />} />
+              <Route path="/assistant" element={<AssistantPage />} />
             </Route>
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
           </Routes></MovementFilterProvider></AuthProvider>

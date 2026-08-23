@@ -23,6 +23,12 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 
 @RestControllerAdvice
 public class ApiExceptionHandler {
+    @ExceptionHandler(AiUnavailableException.class)
+    ResponseEntity<ErrorResponse> handleAiUnavailable(AiUnavailableException exception) {
+        return error(HttpStatus.SERVICE_UNAVAILABLE, "AI_UNAVAILABLE",
+                "O assistente de IA está indisponível no momento. Tente novamente em instantes.");
+    }
+
     @ExceptionHandler(EmailAlreadyExistsException.class)
     ResponseEntity<ErrorResponse> duplicateEmail(EmailAlreadyExistsException exception) {
         return error(HttpStatus.CONFLICT, "EMAIL_ALREADY_EXISTS", exception.getMessage());

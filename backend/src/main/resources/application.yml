@@ -18,3 +18,9 @@ app:
   jwt:
     secret: ${JWT_SECRET}
     expiration-ms: ${JWT_EXPIRATION_MS:86400000}
+
+groq:
+  api-key: ${GROQ_API_KEY:}
+  base-url: ${GROQ_BASE_URL:https://api.groq.com/openai/v1}
+  timeout: ${GROQ_TIMEOUT:20s}
+  transaction-context-limit: ${GROQ_TRANSACTION_CONTEXT_LIMIT:50}

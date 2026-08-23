@@ -64,6 +64,10 @@ PostgreSQL
 - Node.js 24+
 - PostgreSQL 16+ (or Docker)
 
+### Assistente financeiro (Groq)
+
+O assistente usa permanentemente `openai/gpt-oss-20b`. Configure `GROQ_API_KEY` somente no serviço de backend — localmente ou no Render — e nunca como variável `VITE_*` ou no frontend. Ele analisa apenas o contexto autenticado do mês selecionado, não altera dados financeiros e pode retornar `503` em caso de indisponibilidade ou limite do Groq.
+
 ### 1. Start PostgreSQL
 
 ```powershell
