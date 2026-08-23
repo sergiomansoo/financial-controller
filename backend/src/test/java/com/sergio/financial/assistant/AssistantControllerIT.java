@@ -67,6 +67,18 @@ class AssistantControllerIT {
     }
 
     @Test
+    void rejectsNullHistoryEntriesWithValidationErrors() throws Exception {
+        String token = register("Null History User", "assistant.null.history@example.test");
+
+        mockMvc.perform(post("/api/v1/assistant/chat")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"message\":\"teste\",\"month\":\"2026-08\",\"history\":[null]}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
+    }
+
+    @Test
     void returnsAssistantMessageForAuthenticatedRequests() throws Exception {
         String token = register("Assistant User", "assistant.user@example.test");
         when(assistantService.answer(eq(userId("assistant.user@example.test")), any(AssistantChatRequest.class)))

@@ -10,5 +10,5 @@ import java.util.List;
 public record AssistantChatRequest(
         @NotBlank @Size(max = 1000) String message,
         @NotNull YearMonth month,
-        @NotNull @Valid @Size(max = 10) List<AssistantHistoryMessage> history) {
+        @NotNull @Size(max = 10) List<@NotNull @Valid AssistantHistoryMessage> history) {
 }
