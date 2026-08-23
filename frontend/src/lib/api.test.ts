@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { ApiError, login } from './api'
+import { ApiError, askAssistant, login } from './api'
 
 describe('API client', () => {
   afterEach(() => {
@@ -52,5 +52,32 @@ describe('API client', () => {
       code: 'INVALID_CREDENTIALS',
       message: 'Invalid email or password.',
     } satisfies Partial<ApiError>)
+  })
+
+  it('posts a typed assistant request with the persisted bearer session', async () => {
+    localStorage.setItem(
+      'financial-controller.session',
+      JSON.stringify({ token: 'assistant-token', user: { id: '1', name: 'Ada', email: 'ada@example.com' } }),
+    )
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ message: 'Resposta financeira.' }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    )
+    vi.stubGlobal('fetch', fetchMock)
+    const input = {
+      message: 'Quanto gastei?',
+      month: '2026-08',
+      history: [{ role: 'user' as const, content: 'Olá' }],
+    }
+
+    await expect(askAssistant(input)).resolves.toEqual({ message: 'Resposta financeira.' })
+    expect(fetchMock).toHaveBeenCalledWith(
+      'http://localhost:8080/api/v1/assistant/chat',
+      expect.objectContaining({ method: 'POST', body: JSON.stringify(input) }),
+    )
+    const request = fetchMock.mock.calls[0][1] as RequestInit
+    expect(new Headers(request.headers).get('Authorization')).toBe('Bearer assistant-token')
   })
 })

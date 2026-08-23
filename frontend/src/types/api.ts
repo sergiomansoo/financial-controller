@@ -52,3 +52,8 @@ export interface MonthlyEvolution { month: string; income: number; expense: numb
 export interface DashboardData { byCategory: CategorySpending[]; monthlyEvolution: MonthlyEvolution[]; budgets: Budget[] }
 export type TransactionType = 'EXPENSE' | 'INCOME' | 'INVESTMENT'
 export interface ManualTransactionInput { date: string; description: string; amount: number; categoryId: string | number; type: TransactionType }
+
+export type AssistantRole = 'user' | 'assistant'
+export interface AssistantHistoryMessage { role: AssistantRole; content: string }
+export interface AssistantChatRequest { message: string; month: string; history: AssistantHistoryMessage[] }
+export interface AssistantChatResponse { message: string }
