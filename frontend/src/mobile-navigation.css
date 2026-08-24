@@ -1,0 +1,6 @@
+@media(max-width:767px){
+  body.ledger-nav-open{overflow:hidden}
+  .ledger-sidebar{bottom:0;left:0;position:fixed;top:0;transform:translateX(-100%);transition:transform 180ms ease;width:min(288px,calc(100vw - 48px));z-index:40}
+  .ledger-sidebar.ledger-sidebar--mobile-open{transform:translateX(0)}
+  .ledger-nav-backdrop{background:rgba(0,0,0,.62);border:0;bottom:0;cursor:pointer;left:0;padding:0;position:fixed;right:0;top:0;z-index:30}
+}
