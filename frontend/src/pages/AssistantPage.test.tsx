@@ -23,7 +23,7 @@ describe('AssistantPage', () => {
     fireEvent.change(screen.getByLabelText('Pergunta'), {
       target: { value: 'Qual foi a maior despesa?' },
     })
-    fireEvent.click(screen.getByRole('button', { name: 'Enviar' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Enviar pergunta' }))
 
     expect(askAssistantMock).toHaveBeenCalledWith({
       message: 'Qual foi a maior despesa?',
@@ -33,6 +33,22 @@ describe('AssistantPage', () => {
     expect(await screen.findByText('Transporte representa R$ 180,00.')).toBeInTheDocument()
     expect(screen.getByText('Qual foi a maior despesa?')).toBeInTheDocument()
     expect(screen.getByLabelText('Pergunta')).toHaveValue('')
+  })
+
+  it('sends a question with Enter and keeps Shift+Enter available for a line break', async () => {
+    askAssistantMock.mockResolvedValue({ message: 'Resposta.' })
+    render(<AssistantPage />)
+
+    const question = screen.getByLabelText('Pergunta')
+    fireEvent.change(question, { target: { value: 'Posso enviar com Enter?' } })
+    fireEvent.keyDown(question, { key: 'Enter' })
+
+    await waitFor(() => expect(askAssistantMock).toHaveBeenCalledTimes(1))
+
+    fireEvent.change(question, { target: { value: 'Uma pergunta\ncom duas linhas' } })
+    fireEvent.keyDown(question, { key: 'Enter', shiftKey: true })
+
+    expect(askAssistantMock).toHaveBeenCalledTimes(1)
   })
 
   it('keeps the question visible and retries the last unsent request after a provider error', async () => {
@@ -50,7 +66,7 @@ describe('AssistantPage', () => {
     fireEvent.change(screen.getByLabelText('Pergunta'), {
       target: { value: 'Quanto gastei?' },
     })
-    fireEvent.click(screen.getByRole('button', { name: 'Enviar' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Enviar pergunta' }))
 
     expect(await screen.findByRole('alert')).toHaveTextContent(unavailable.message)
     expect(screen.getByLabelText('Pergunta')).toHaveValue('Quanto gastei?')
@@ -81,7 +97,7 @@ describe('AssistantPage', () => {
     )).toBeInTheDocument()
 
     fireEvent.change(screen.getByLabelText('Pergunta'), { target: { value: 'Analise meus dados' } })
-    fireEvent.click(screen.getByRole('button', { name: 'Enviar' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Enviar pergunta' }))
 
     expect(await screen.findByText('<img src=x onerror=alert(1)> resposta')).toBeInTheDocument()
     expect(container.querySelector('img')).not.toBeInTheDocument()
@@ -93,7 +109,7 @@ describe('AssistantPage', () => {
 
     for (let index = 1; index <= 6; index += 1) {
       fireEvent.change(screen.getByLabelText('Pergunta'), { target: { value: `Pergunta ${index}` } })
-      fireEvent.click(screen.getByRole('button', { name: 'Enviar' }))
+      fireEvent.click(screen.getByRole('button', { name: 'Enviar pergunta' }))
       await screen.findByText(`Resposta Pergunta ${index}`)
     }
 
