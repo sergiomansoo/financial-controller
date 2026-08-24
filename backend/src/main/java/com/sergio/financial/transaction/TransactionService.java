@@ -9,7 +9,9 @@ import com.sergio.financial.user.UserRepository;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.YearMonth;
+import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -97,6 +99,14 @@ public class TransactionService {
     @Transactional(readOnly = true)
     public boolean isDuplicate(Long userId, String fingerprint) {
         return transactions.existsByUserIdAndDuplicateFingerprint(userId, fingerprint);
+    }
+
+    @Transactional(readOnly = true)
+    public Set<String> duplicateFingerprints(Long userId, Collection<String> fingerprints) {
+        if (fingerprints.isEmpty()) {
+            return Set.of();
+        }
+        return transactions.findDuplicateFingerprints(userId, fingerprints);
     }
 
     public TransactionType typeForPreview(String history) {

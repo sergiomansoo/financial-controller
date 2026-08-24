@@ -4,6 +4,7 @@ import com.sergio.financial.transaction.TransactionResponse;
 import com.sergio.financial.transaction.TransactionService;
 import java.io.IOException;
 import java.util.List;
+import java.util.Set;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -52,9 +53,12 @@ public class ImportController {
     public ImportPreviewResponse previewStatement(@RequestParam("file") MultipartFile file, Authentication authentication) {
         Long userId = Long.valueOf(authentication.getName());
         try {
-            List<ImportPreviewResponse.PreviewRow> rows = parser.parse(file.getInputStream()).stream()
+            List<ParsedTransaction> parsed = parser.parse(file.getInputStream());
+            Set<String> duplicateFingerprints = transactions.duplicateFingerprints(userId,
+                    parsed.stream().map(ParsedTransaction::duplicateFingerprint).toList());
+            List<ImportPreviewResponse.PreviewRow> rows = parsed.stream()
                     .map(row -> new ImportPreviewResponse.PreviewRow(row.date(), row.history(), row.description(), row.amount(),
-                            transactions.typeForPreview(row.history()), transactions.isDuplicate(userId, row.duplicateFingerprint())))
+                            transactions.typeForPreview(row.history()), duplicateFingerprints.contains(row.duplicateFingerprint())))
                     .toList();
             return new ImportPreviewResponse(rows.size(), (int) rows.stream().filter(ImportPreviewResponse.PreviewRow::duplicate).count(), rows);
         } catch (IOException exception) {

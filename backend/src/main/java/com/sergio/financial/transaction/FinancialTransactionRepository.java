@@ -1,8 +1,10 @@
 package com.sergio.financial.transaction;
 
 import java.time.LocalDate;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -17,6 +19,13 @@ public interface FinancialTransactionRepository extends JpaRepository<FinancialT
             Long userId, LocalDate from, LocalDate until);
 
     boolean existsByUserIdAndDuplicateFingerprint(Long userId, String duplicateFingerprint);
+
+    @Query("""
+            select transaction.duplicateFingerprint from FinancialTransaction transaction
+            where transaction.user.id = :userId
+              and transaction.duplicateFingerprint in :fingerprints
+            """)
+    Set<String> findDuplicateFingerprints(Long userId, Collection<String> fingerprints);
 
     boolean existsByCategoryId(Long categoryId);
 
