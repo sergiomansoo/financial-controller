@@ -38,6 +38,14 @@ public class Category {
         this.systemCategory = false;
     }
 
+    public static Category system(String name) {
+        Category category = new Category();
+        category.name = name;
+        category.systemCategory = true;
+        category.salary = false;
+        return category;
+    }
+
     public void updateSalary(boolean salary) {
         this.salary = salary;
     }
