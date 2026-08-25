@@ -120,4 +120,30 @@ describe('AssistantPage', () => {
     const lastRequest = askAssistantMock.mock.calls[askAssistantMock.mock.calls.length - 1]?.[0]
     expect(lastRequest?.history).toHaveLength(10)
   })
+
+  it('keeps a detailed assistant answer available as clean history for a follow-up question', async () => {
+    const detailedAnswer = 'a'.repeat(1001)
+    askAssistantMock
+      .mockResolvedValueOnce({ message: detailedAnswer, visualType: 'budget_summary', visualData: { categories: [] } })
+      .mockResolvedValueOnce({ message: 'Suas metas est\u00e3o em dia.' })
+    render(<AssistantPage />)
+
+    const question = screen.getByLabelText('Pergunta')
+    fireEvent.change(question, { target: { value: 'Me explique o carro' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Enviar pergunta' }))
+    await screen.findByText(detailedAnswer)
+
+    fireEvent.change(question, { target: { value: 'Quais s\u00e3o minhas metas?' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Enviar pergunta' }))
+
+    await waitFor(() => expect(askAssistantMock).toHaveBeenCalledTimes(2))
+    expect(askAssistantMock).toHaveBeenLastCalledWith({
+      message: 'Quais s\u00e3o minhas metas?',
+      month: expect.any(String),
+      history: [
+        { role: 'user', content: 'Me explique o carro' },
+        { role: 'assistant', content: detailedAnswer },
+      ],
+    })
+  })
 })

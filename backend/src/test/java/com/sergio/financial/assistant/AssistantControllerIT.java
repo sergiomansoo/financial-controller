@@ -79,6 +79,27 @@ class AssistantControllerIT {
     }
 
     @Test
+    void acceptsDetailedAssistantHistoryForFollowUpQuestions() throws Exception {
+        String email = "assistant.long.history@example.test";
+        String token = register("Long History User", email);
+        when(assistantService.answer(eq(userId(email)), any(AssistantChatRequest.class)))
+                .thenReturn(new AssistantChatResponse("Suas metas est\u00e3o em dia.", null, null));
+        String detailedAnswer = "a".repeat(1001);
+
+        mockMvc.perform(post("/api/v1/assistant/chat")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(java.util.Map.of(
+                                "message", "Quais s\u00e3o minhas metas?",
+                                "month", "2026-08",
+                                "history", java.util.List.of(
+                                        java.util.Map.of("role", "user", "content", "Me explique o carro"),
+                                        java.util.Map.of("role", "assistant", "content", detailedAnswer))))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("Suas metas est\u00e3o em dia."));
+    }
+
+    @Test
     void returnsAssistantMessageForAuthenticatedRequests() throws Exception {
         String token = register("Assistant User", "assistant.user@example.test");
         when(assistantService.answer(eq(userId("assistant.user@example.test")), any(AssistantChatRequest.class)))
@@ -90,7 +111,8 @@ class AssistantControllerIT {
                         .content("{\"message\":\"Como foi agosto?\",\"month\":\"2026-08\",\"history\":[]}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message").value("Suas despesas foram R$ 100,00."))
-                .andExpect(jsonPath("$.length()").value(1));
+                .andExpect(jsonPath("$.visualType").value(org.hamcrest.Matchers.nullValue()))
+                .andExpect(jsonPath("$.visualData").value(org.hamcrest.Matchers.nullValue()));
     }
 
     @Test
