@@ -113,6 +113,21 @@ describe('AssistantPage', () => {
     expect(await screen.findByText('Importante:', { selector: 'strong' })).toBeInTheDocument()
   })
 
+  it('scrolls only the transcript to the newest assistant response', async () => {
+    const originalScrollTo = HTMLElement.prototype.scrollTo
+    const scrollTo = vi.fn()
+    Object.defineProperty(HTMLElement.prototype, 'scrollTo', { configurable: true, value: scrollTo })
+    askAssistantMock.mockResolvedValue({ message: 'Resposta nova.' })
+    render(<AssistantPage />)
+
+    fireEvent.change(screen.getByLabelText('Pergunta'), { target: { value: 'Pergunta' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Enviar pergunta' }))
+
+    await screen.findByText('Resposta nova.')
+    expect(scrollTo).toHaveBeenCalledWith(expect.objectContaining({ top: 0 }))
+    Object.defineProperty(HTMLElement.prototype, 'scrollTo', { configurable: true, value: originalScrollTo })
+  })
+
   it('keeps only the latest ten completed transcript messages', async () => {
     askAssistantMock.mockImplementation(async ({ message }) => ({ message: `Resposta ${message}` }))
     render(<AssistantPage />)
