@@ -49,6 +49,8 @@ class AssistantServiceTest {
             Você só pode analisar; nunca afirma ter alterado transações, categorias ou orçamentos.
             Quando não houver dados suficientes, explique qual dado está faltando.
             Suas respostas são informativas e não constituem aconselhamento financeiro profissional.
+            Para saudações, dicas gerais e explicações que não dependam dos dados da conta, responda diretamente em texto e não chame ferramentas.
+            Use ferramentas somente para consultar fatos financeiros reais da conta selecionada.
             """.stripTrailing();
 
     @Mock
@@ -78,7 +80,7 @@ class AssistantServiceTest {
                 .thenReturn(toolCall("call-1", "get_monthly_dashboard", "{\"month\":\"2026-08\"}"))
                 .thenReturn(finalAnswer("Alimentação foi sua maior despesa."));
 
-        assertThat(service.answer(42L, request("Qual foi a maior categoria?", "2026-08")))
+        assertThat(service.answer(42L, request("Qual foi a maior categoria?", "2026-08")).message())
                 .isEqualTo("Alimentação foi sua maior despesa.");
 
         verify(dashboardService).dashboard(42L, YearMonth.of(2026, 8), DashboardFilter.BOTH);
@@ -186,7 +188,7 @@ class AssistantServiceTest {
                 new AssistantHistoryMessage("user", "Como foi julho?"),
                 new AssistantHistoryMessage("assistant", "Julho teve dados parciais.")));
 
-        assertThat(service.answer(42L, request)).isEqualTo("Resposta.");
+        assertThat(service.answer(42L, request).message()).isEqualTo("Resposta.");
 
         @SuppressWarnings("unchecked")
         ArgumentCaptor<List<ObjectNode>> messagesCaptor = ArgumentCaptor.forClass(List.class);
@@ -212,7 +214,7 @@ class AssistantServiceTest {
                 .thenReturn(finalAnswer("Resposta final."));
         when(budgetService.list(42L, YearMonth.of(2026, 8))).thenReturn(List.of());
 
-        assertThat(service.answer(42L, request("Orçamentos?", "2026-08"))).isEqualTo("Resposta final.");
+        assertThat(service.answer(42L, request("Orçamentos?", "2026-08")).message()).isEqualTo("Resposta final.");
 
         @SuppressWarnings("unchecked")
         ArgumentCaptor<List<ObjectNode>> messagesCaptor = ArgumentCaptor.forClass(List.class);

@@ -28,4 +28,6 @@ export interface SavingsGoalInput { name: string; targetAmount: number; targetDa
 export type AssistantRole = 'user' | 'assistant'
 export interface AssistantHistoryMessage { role: AssistantRole; content: string }
 export interface AssistantChatRequest { message: string; month: string; history: AssistantHistoryMessage[] }
-export interface AssistantChatResponse { message: string }
+export type AssistantVisualType = 'budget_summary' | 'monthly_summary' | 'transactions_list' | null
+export interface BudgetVisualCategory { name: string; spent: number; limit: number | null; status: 'no_limit' | 'no_spending' | 'within_limit' | 'over_limit' }
+export interface AssistantChatResponse { message: string; visualType?: AssistantVisualType; visualData?: unknown | null }

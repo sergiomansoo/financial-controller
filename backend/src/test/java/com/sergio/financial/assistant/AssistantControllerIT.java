@@ -82,7 +82,7 @@ class AssistantControllerIT {
     void returnsAssistantMessageForAuthenticatedRequests() throws Exception {
         String token = register("Assistant User", "assistant.user@example.test");
         when(assistantService.answer(eq(userId("assistant.user@example.test")), any(AssistantChatRequest.class)))
-                .thenReturn("Suas despesas foram R$ 100,00.");
+                .thenReturn(new AssistantChatResponse("Suas despesas foram R$ 100,00.", null, null));
 
         mockMvc.perform(post("/api/v1/assistant/chat")
                         .header("Authorization", "Bearer " + token)
@@ -91,6 +91,22 @@ class AssistantControllerIT {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message").value("Suas despesas foram R$ 100,00."))
                 .andExpect(jsonPath("$.length()").value(1));
+    }
+
+    @Test
+    void returnsNoVisualPayloadForADirectAssistantAnswer() throws Exception {
+        String token = register("General Advice User", "assistant.advice@example.test");
+        when(assistantService.answer(eq(userId("assistant.advice@example.test")), any(AssistantChatRequest.class)))
+                .thenReturn(new AssistantChatResponse("Comece registrando seus gastos vari\u00e1veis.", null, null));
+
+        mockMvc.perform(post("/api/v1/assistant/chat")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"message\":\"Me d\u00ea uma dica\",\"month\":\"2026-08\",\"history\":[]}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("Comece registrando seus gastos vari\u00e1veis."))
+                .andExpect(jsonPath("$.visualType").value(org.hamcrest.Matchers.nullValue()))
+                .andExpect(jsonPath("$.visualData").value(org.hamcrest.Matchers.nullValue()));
     }
 
     private String register(String name, String email) throws Exception {

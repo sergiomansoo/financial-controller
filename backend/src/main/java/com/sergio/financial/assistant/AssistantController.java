@@ -19,6 +19,6 @@ public class AssistantController {
     @PostMapping("/chat")
     public AssistantChatResponse chat(@Valid @RequestBody AssistantChatRequest request,
                                       Authentication authentication) {
-        return new AssistantChatResponse(assistant.answer(Long.valueOf(authentication.getName()), request));
+        return assistant.answer(Long.valueOf(authentication.getName()), request);
     }
 }

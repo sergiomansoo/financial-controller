@@ -20,6 +20,8 @@ public class AssistantService {
             Você só pode analisar; nunca afirma ter alterado transações, categorias ou orçamentos.
             Quando não houver dados suficientes, explique qual dado está faltando.
             Suas respostas são informativas e não constituem aconselhamento financeiro profissional.
+            Para saudações, dicas gerais e explicações que não dependam dos dados da conta, responda diretamente em texto e não chame ferramentas.
+            Use ferramentas somente para consultar fatos financeiros reais da conta selecionada.
             """.stripTrailing();
 
     private final GroqClient groqClient;
@@ -34,10 +36,11 @@ public class AssistantService {
         this.toolSchemas = schemas();
     }
 
-    public String answer(Long userId, AssistantChatRequest request) {
+    public AssistantChatResponse answer(Long userId, AssistantChatRequest request) {
         List<ObjectNode> messages = initialMessages(request);
         int toolCallCount = 0;
         boolean transactionListUsed = false;
+        ToolExecution lastTool = null;
 
         for (int requestNumber = 1; requestNumber <= MAX_GROQ_REQUESTS; requestNumber++) {
             ObjectNode response = groqClient.complete(List.copyOf(messages), toolSchemas.deepCopy());
@@ -63,9 +66,10 @@ public class AssistantService {
                         if (toolCallCount >= MAX_TOOL_CALLS) {
                             throw new AiUnavailableException();
                         }
-                        boolean listedTransactions = executeTool(userId, request.month(), toolCall, messages,
+                        ToolExecution execution = executeTool(userId, request.month(), toolCall, messages,
                                 transactionListUsed);
-                        transactionListUsed = transactionListUsed || listedTransactions;
+                        transactionListUsed = transactionListUsed || execution.listsTransactions();
+                        lastTool = execution;
                         toolCallCount++;
                     }
                     continue;
@@ -76,12 +80,12 @@ public class AssistantService {
             if (content == null || !content.isTextual() || content.textValue().isBlank()) {
                 throw new AiUnavailableException();
             }
-            return content.textValue().trim();
+            return response(content.textValue().trim(), request.month(), lastTool);
         }
         throw new AiUnavailableException();
     }
 
-    private boolean executeTool(Long userId, java.time.YearMonth selectedMonth, JsonNode toolCall,
+    private ToolExecution executeTool(Long userId, java.time.YearMonth selectedMonth, JsonNode toolCall,
                                 List<ObjectNode> messages, boolean transactionListUsed) {
         if (toolCall == null || !toolCall.isObject()) {
             throw new AiUnavailableException();
@@ -111,12 +115,39 @@ public class AssistantService {
             toolMessage.put("tool_call_id", id);
             toolMessage.put("content", objectMapper.writeValueAsString(result));
             messages.add(toolMessage);
-            return listsTransactions;
+            return new ToolExecution(listsTransactions, name, result);
         } catch (AiUnavailableException exception) {
             throw exception;
         } catch (JsonProcessingException exception) {
             throw new AiUnavailableException();
         }
+    }
+
+    private AssistantChatResponse response(String message, java.time.YearMonth month, ToolExecution tool) {
+        if (tool == null) return new AssistantChatResponse(message, null, null);
+        ObjectNode data = objectMapper.createObjectNode().put("month", month.toString());
+        if ("get_monthly_budgets".equals(tool.name())) {
+            ArrayNode categories = data.putArray("categories");
+            for (JsonNode budget : tool.result()) {
+                java.math.BigDecimal limit = budget.path("limit").decimalValue();
+                java.math.BigDecimal spent = budget.path("spent").decimalValue();
+                String status = limit == null || limit.signum() <= 0 ? "no_limit"
+                        : spent == null || spent.signum() == 0 ? "no_spending"
+                        : spent.compareTo(limit) > 0 ? "over_limit" : "within_limit";
+                ObjectNode category = categories.addObject();
+                category.put("name", budget.path("categoryName").asText());
+                category.set("spent", budget.path("spent"));
+                if (limit == null || limit.signum() <= 0) category.putNull("limit"); else category.set("limit", budget.path("limit"));
+                category.put("status", status);
+            }
+            return new AssistantChatResponse(message, "budget_summary", data);
+        }
+        if ("get_monthly_dashboard".equals(tool.name())) return new AssistantChatResponse(message, "monthly_summary", tool.result());
+        if ("list_month_transactions".equals(tool.name())) return new AssistantChatResponse(message, "transactions_list", tool.result());
+        return new AssistantChatResponse(message, null, null);
+    }
+
+    private record ToolExecution(boolean listsTransactions, String name, JsonNode result) {
     }
 
     private List<ObjectNode> initialMessages(AssistantChatRequest request) {
