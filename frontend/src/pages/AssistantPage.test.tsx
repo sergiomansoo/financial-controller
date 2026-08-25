@@ -103,6 +103,16 @@ describe('AssistantPage', () => {
     expect(container.querySelector('img')).not.toBeInTheDocument()
   })
 
+  it('renders emphasis returned in a general assistant answer', async () => {
+    askAssistantMock.mockResolvedValue({ message: '**Importante:** mantenha uma reserva antes de investir.' })
+    render(<AssistantPage />)
+
+    fireEvent.change(screen.getByLabelText('Pergunta'), { target: { value: 'Me dê uma dica de investimento' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Enviar pergunta' }))
+
+    expect(await screen.findByText('Importante:', { selector: 'strong' })).toBeInTheDocument()
+  })
+
   it('keeps only the latest ten completed transcript messages', async () => {
     askAssistantMock.mockImplementation(async ({ message }) => ({ message: `Resposta ${message}` }))
     render(<AssistantPage />)

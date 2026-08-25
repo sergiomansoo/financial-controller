@@ -15,6 +15,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.sergio.financial.budget.BudgetService;
+import com.sergio.financial.budget.BudgetResponse;
 import com.sergio.financial.category.CategoryResponse;
 import com.sergio.financial.config.GroqProperties;
 import com.sergio.financial.dashboard.DashboardFilter;
@@ -51,6 +52,8 @@ class AssistantServiceTest {
             Suas respostas são informativas e não constituem aconselhamento financeiro profissional.
             Para saudações, dicas gerais e explicações que não dependam dos dados da conta, responda diretamente em texto e não chame ferramentas.
             Use ferramentas somente para consultar fatos financeiros reais da conta selecionada.
+            Responda em texto simples, com parágrafos e listas curtas quando necessário. Não use Markdown: não use **, tabelas com | ou blocos de código.
+            Quando uma ferramenta fornecer um cartão visual, faça apenas uma síntese curta e não replique a tabela ou a lista completa de valores.
             """.stripTrailing();
 
     @Mock
@@ -226,6 +229,21 @@ class AssistantServiceTest {
         assertThat(result.path("role").asText()).isEqualTo("tool");
         assertThat(result.path("tool_call_id").asText()).isEqualTo("call-9");
         assertThat(objectMapper.readTree(result.path("content").asText())).isEqualTo(objectMapper.createArrayNode());
+    }
+
+    @Test
+    void replacesBudgetTableTextWithTheVisualCardSummary() {
+        when(groqClient.complete(any(), any()))
+                .thenReturn(toolCall("call-1", "get_monthly_budgets", "{\"month\":\"2026-08\"}"))
+                .thenReturn(finalAnswer("| Categoria | Gastos |\n| Transporte | 950,00 |"));
+        when(budgetService.list(42L, YearMonth.of(2026, 8))).thenReturn(List.of(
+                new BudgetResponse(1L, "Transporte", new BigDecimal("950.00"), new BigDecimal("900.00"), true)));
+
+        AssistantChatResponse response = service.answer(42L, request("Quais são minhas metas?", "2026-08"));
+
+        assertThat(response.visualType()).isEqualTo("budget_summary");
+        assertThat(response.message()).contains("1 categoria acima do limite: Transporte")
+                .doesNotContain("|");
     }
 
     @Test

@@ -22,6 +22,8 @@ public class AssistantService {
             Suas respostas são informativas e não constituem aconselhamento financeiro profissional.
             Para saudações, dicas gerais e explicações que não dependam dos dados da conta, responda diretamente em texto e não chame ferramentas.
             Use ferramentas somente para consultar fatos financeiros reais da conta selecionada.
+            Responda em texto simples, com parágrafos e listas curtas quando necessário. Não use Markdown: não use **, tabelas com | ou blocos de código.
+            Quando uma ferramenta fornecer um cartão visual, faça apenas uma síntese curta e não replique a tabela ou a lista completa de valores.
             """.stripTrailing();
 
     private final GroqClient groqClient;
@@ -140,11 +142,29 @@ public class AssistantService {
                 if (limit == null || limit.signum() <= 0) category.putNull("limit"); else category.set("limit", budget.path("limit"));
                 category.put("status", status);
             }
-            return new AssistantChatResponse(message, "budget_summary", data);
+            return new AssistantChatResponse(budgetSummaryMessage(tool.result()), "budget_summary", data);
         }
         if ("get_monthly_dashboard".equals(tool.name())) return new AssistantChatResponse(message, "monthly_summary", tool.result());
         if ("list_month_transactions".equals(tool.name())) return new AssistantChatResponse(message, "transactions_list", tool.result());
         return new AssistantChatResponse(message, null, null);
+    }
+
+    private String budgetSummaryMessage(JsonNode budgets) {
+        List<String> exceededCategories = new ArrayList<>();
+        for (JsonNode budget : budgets) {
+            if (budget.path("exceeded").asBoolean()) {
+                exceededCategories.add(budget.path("categoryName").asText());
+            }
+        }
+        if (exceededCategories.isEmpty()) {
+            return "Confira o resumo visual dos seus orçamentos abaixo. Nenhuma categoria ultrapassou o limite.";
+        }
+        if (exceededCategories.size() == 1) {
+            return "Confira o resumo visual dos seus orçamentos abaixo. Há 1 categoria acima do limite: "
+                    + exceededCategories.getFirst() + ".";
+        }
+        return "Confira o resumo visual dos seus orçamentos abaixo. Há " + exceededCategories.size()
+                + " categorias acima do limite: " + String.join(", ", exceededCategories) + ".";
     }
 
     private record ToolExecution(boolean listsTransactions, String name, JsonNode result) {
