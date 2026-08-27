@@ -1,45 +1,83 @@
-# Financial Controller
+<h1 align="center">Financial Controller</h1>
 
-Personal finance, presented like a premium financial instrument.
+<p align="center">
+  Finanças pessoais apresentadas como um instrumento financeiro premium.
+</p>
 
-Financial Controller is a full-stack application for importing bank statements, classifying transactions, planning spending, and turning savings goals into measurable progress. The current `main` release uses the **Monolith Noir** visual system: a monochrome, high-contrast interface built around calm data reading, precise typography, and accessible financial summaries.
+<p align="center">
+  <img src="https://img.shields.io/badge/Java-21-b07219?logo=openjdk&logoColor=white" />
+  <img src="https://img.shields.io/badge/Spring%20Boot-3-6DB33F?logo=springboot&logoColor=white" />
+  <img src="https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black" />
+  <img src="https://img.shields.io/badge/TypeScript-blue?logo=typescript&logoColor=white" />
+  <img src="https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white" />
+</p>
 
-## Why this project stands out
+---
 
-- **A real product surface:** authentication, transaction workflows, CSV preview/import, categorisation, budgets, savings goals, dashboards, and settings are implemented as connected user journeys.
-- **Data integrity by design:** imports are user-scoped, duplicate candidates are preserved for review, invalid files do not create history entries, and Flyway migrations keep the schema reproducible.
-- **Financial clarity:** income, expenses, investments, monthly limits, savings contributions, category breakdowns, and six-month evolution are calculated from the same transaction model.
-- **A deliberate visual identity:** Monolith Noir replaces generic dashboard styling with a restrained black/gray palette, Inter for interface hierarchy, JetBrains Mono for numbers, and dense but readable cards inspired by financial terminals.
-- **Quality as part of delivery:** frontend behavior is covered with Vitest and Testing Library; backend behavior is covered with JUnit, MockMvc, and integration tests; every implementation is published with a Conventional Commit.
+## Sobre o projeto
 
-## Product capabilities
+**Financial Controller** é uma aplicação full stack para importar extratos bancários, classificar transações, planejar gastos e transformar metas de economia em progresso mensurável. A versão atual segue o sistema visual **Monolith Noir**: uma interface monocromática de alto contraste, construída para leitura calma de dados, tipografia precisa e resumos financeiros acessíveis.
+
+Diferenciais do projeto:
+
+- **Superfície de produto real**: autenticação, importação de CSV com preview, categorização, orçamentos, metas de economia, dashboards e configurações funcionam como jornadas de usuário conectadas, não como telas isoladas
+- **Integridade de dados por design**: importações são vinculadas ao usuário, candidatos a duplicata são preservados para revisão manual (em vez de descartados silenciosamente), arquivos inválidos não geram histórico, e migrations com Flyway garantem um schema reproduzível
+- **Clareza financeira**: receitas, despesas, investimentos, limites mensais, contribuições de metas, distribuição por categoria e evolução de 6 meses são calculados a partir do mesmo modelo de transação
+- **Qualidade como parte da entrega**: front-end coberto com Vitest e Testing Library, back-end coberto com JUnit, MockMvc e testes de integração; todo commit segue o padrão Conventional Commits
+
+---
+
+## Tecnologias utilizadas
+
+| Camada | Stack |
+|---|---|
+| **Front-end** | React 19, TypeScript, Vite, Recharts, Tailwind CSS |
+| **Back-end** | Java 21, Spring Boot 3, Spring Security, JPA |
+| **Banco de dados** | PostgreSQL 16, Flyway |
+| **IA** | Assistente financeiro via Groq (`openai/gpt-oss-20b`) |
+| **Testes** | Vitest, Testing Library (front-end) · JUnit, MockMvc (back-end) |
+
+---
+
+## Funcionalidades
 
 ### Dashboard
 
-- KPI cards for income, expenses, savings, and investments.
-- Monthly balance and six-month evolution charts.
-- Expense breakdown by category with percentages and accessible data tables.
-- Savings plans and combined monthly spending-limit progress.
-- Persistent income/expense/both filtering shared with transactions.
+- Cards de KPI para receitas, despesas, economia e investimentos
+- Gráficos de saldo mensal e evolução dos últimos 6 meses
+- Distribuição de despesas por categoria, com percentuais e tabelas acessíveis
+- Planos de economia e progresso combinado de limites mensais de gasto
+- Filtro persistente por receita/despesa/ambos, compartilhado com a tela de transações
 
-### Transactions and imports
+### Transações e importações
 
-- Paginated transaction table with category, date-range, type, and search filters.
-- CSV preview before confirmation.
-- Import history showing original filename, row count, and import date/time.
-- Duplicate detection with review status instead of silent deletion.
-- Manual category changes and optional keyword-learning rules.
+- Tabela paginada de transações com filtros por categoria, período, tipo e busca
+- Preview do CSV antes da confirmação da importação
+- Histórico de importações com nome do arquivo original, quantidade de linhas e data/hora
+- Detecção de duplicatas com status de revisão (em vez de exclusão automática)
+- Alteração manual de categoria e regras opcionais de classificação por palavra-chave
 
-### Planning
+### Planejamento
 
-- Monthly spending limits by category.
-- Combined limit progress with positive display values.
-- Savings goals with target dates, planned monthly amounts, accumulated contributions, remaining amount, and manual deposits.
-- Goal progress cards with responsive actions and accessible focus behavior.
+- Limites de gasto mensais por categoria
+- Progresso combinado de limites, com valores exibidos de forma positiva
+- Metas de economia com data-alvo, valor mensal planejado, contribuições acumuladas, valor restante e depósitos manuais
+- Cards de progresso de metas com ações responsivas e foco acessível
 
-## Architecture
+---
 
-```text
+## Acesso para teste
+
+Use as credenciais abaixo para explorar a aplicação sem precisar criar uma conta:
+
+**Email:** `teste.financeiro@exemplo.com`<br>
+**Senha:** `TesteFinanceiro`
+
+---
+
+## Arquitetura
+
+```
 React + TypeScript + Vite
         │  REST / JSON + Bearer JWT
         ▼
@@ -49,26 +87,87 @@ Spring Boot + Spring Security + JPA
 PostgreSQL
 ```
 
-| Layer | Stack | Responsibility |
-| --- | --- | --- |
-| Frontend | React 19, TypeScript, Vite, Recharts, Tailwind | Routing, auth session, forms, charts, filters, responsive UI |
-| Backend | Java 21, Spring Boot 3, Spring Security, JPA | REST API, authorization, business rules, validation |
-| Database | PostgreSQL, Flyway | User-scoped persistence and schema evolution |
-| Quality | Vitest, Testing Library, JUnit, MockMvc | Component, interaction, controller, and integration coverage |
+---
 
-## Run locally
+## Endpoints principais
 
-### Prerequisites
+Todas as rotas, exceto as de autenticação, exigem o header `Authorization: Bearer <token>`.
+
+| Método | Rota | Descrição |
+|---|---|---|
+| POST | `/api/v1/auth/register` | Cria uma conta |
+| POST | `/api/v1/auth/login` | Autentica e retorna um JWT |
+| GET | `/api/v1/dashboard?month=YYYY-MM&filter=both` | Métricas e séries do dashboard |
+| GET | `/api/v1/transactions` | Transações paginadas e filtradas |
+| POST | `/api/v1/imports` | Importa um extrato em CSV |
+| GET | `/api/v1/imports` | Lista o histórico de importações do usuário autenticado |
+| GET/POST/DELETE | `/api/v1/category-rules` | Gerencia regras de classificação por palavra-chave |
+| GET | `/api/v1/budgets?month=YYYY-MM` | Lê os limites mensais |
+| PUT | `/api/v1/budgets/{categoryId}?month=YYYY-MM` | Cria ou atualiza um limite |
+
+---
+
+## Assistente financeiro com function calling
+
+O projeto conta com um assistente em português, integrado via **Groq** usando o modelo `openai/gpt-oss-20b`, que responde perguntas sobre a situação financeira do usuário dentro do mês selecionado no dashboard.
+
+Em vez de gerar respostas soltas a partir de texto livre, o assistente usa **function calling**: o modelo decide, com base na pergunta, quais funções internas chamar para buscar dados reais antes de formular a resposta. As funções expostas são todas de **leitura**, restritas ao contexto autenticado do usuário:
+
+- Consulta de métricas do dashboard (receitas, despesas, saldo, investimentos)
+- Consulta de orçamento e limites por categoria
+- Comparação entre receitas e despesas
+- Listagem de transações do período
+
+Restrições de design aplicadas:
+
+- **Sem acesso direto** ao banco de dados, ao token JWT ou a senhas — o assistente só enxerga o que as funções expõem
+- **Não realiza escrita**: não cria, edita ou apaga transações, metas ou orçamentos
+- **Limite de chamadas por interação**: até 4 chamadas de função e 5 chamadas ao provedor Groq, evitando loops ou uso excessivo de tokens
+- Retorna `503` de forma controlada em caso de indisponibilidade ou limite do Groq, sem quebrar o restante da aplicação
+
+A decisão de não usar RAG, embeddings ou pgvector foi deliberada: para o escopo do assistente (responder sobre dados estruturados e já existentes no banco), function calling sobre endpoints de leitura é suficiente e evita custo e complexidade operacional desnecessários.
+
+---
+
+## Processo de desenvolvimento: Spec-Driven Development
+
+O projeto foi construído seguindo **Spec-Driven Development (SDD)**: cada funcionalidade nasce de uma especificação escrita antes da implementação, não do código em si.
+
+Fluxo adotado:
+
+1. **Especificação** — definição do comportamento esperado, regras de negócio e formato de dados antes de escrever código (por exemplo, o PRD que define o formato do CSV de extrato com base no padrão do Banco Inter)
+2. **Implementação guiada por testes** — o código é escrito para atender à spec, com testes cobrindo o comportamento descrito
+3. **Revisão de diffs** — mudanças são revisadas antes de seguir adiante, comparando o que foi implementado com o que foi especificado
+4. **Execução de testes antes de cada commit** — garante que a spec continua sendo satisfeita a cada mudança
+
+Essa abordagem reduziu ambiguidade em features com regras de negócio mais sensíveis, como detecção de duplicidade na importação de extratos e cálculo de progresso de metas de economia, já que o comportamento esperado ficava definido antes de qualquer linha de código.
+
+---
+
+## Estrutura do projeto
+
+```
+backend/src/main/java/       # API, serviços de domínio, segurança
+backend/src/main/resources/  # Migrations Flyway e configuração
+backend/src/test/            # Testes de controller e integração
+frontend/src/components/     # Navegação, gráficos, formulários, UI compartilhada
+frontend/src/pages/          # Telas por rota
+frontend/src/lib/            # Cliente da API e sessão de autenticação
+frontend/src/types/          # Contratos de API compartilhados
+docs/                        # Specs de produto, planos de QA e fixtures
+```
+
+---
+
+## Como rodar o projeto
+
+### Pré-requisitos
 
 - Java 21+
 - Node.js 24+
-- PostgreSQL 16+ (or Docker)
+- PostgreSQL 16+ (ou Docker)
 
-### Assistente financeiro (Groq)
-
-O assistente usa permanentemente `openai/gpt-oss-20b`. Configure `GROQ_API_KEY` somente no serviço de backend — localmente ou no Render — e nunca como variável `VITE_*` ou no frontend. Ele analisa apenas o contexto autenticado do mês selecionado, não altera dados financeiros e pode retornar `503` em caso de indisponibilidade ou limite do Groq.
-
-### 1. Start PostgreSQL
+### 1. Subir o PostgreSQL
 
 ```powershell
 docker run --name financial-controller-postgres --rm `
@@ -78,7 +177,7 @@ docker run --name financial-controller-postgres --rm `
   -p 5432:5432 postgres:16
 ```
 
-### 2. Start the API
+### 2. Iniciar a API
 
 ```powershell
 Set-Location backend
@@ -90,9 +189,9 @@ $env:APP_CORS_ALLOWED_ORIGINS='http://localhost:5173,http://127.0.0.1:5173'
 .\mvnw.cmd spring-boot:run
 ```
 
-The API is available at `http://localhost:8080/api/v1`.
+A API fica disponível em `http://localhost:8080/api/v1`.
 
-### 3. Start the frontend
+### 3. Iniciar o front-end
 
 ```powershell
 Set-Location frontend
@@ -101,76 +200,37 @@ $env:VITE_API_URL='http://localhost:8080/api/v1'
 npm run dev
 ```
 
-Open `http://localhost:5173`. Keep the hostname consistent with the CORS variable. To use different ports, update both the Vite URL and the API CORS allow-list together.
+Acesse `http://localhost:5173`. Mantenha o hostname consistente com a variável de CORS — se mudar as portas, atualize a URL do Vite e a allow-list da API juntas.
 
-## Test and build
+### Assistente financeiro (Groq)
+
+O assistente usa permanentemente `openai/gpt-oss-20b`. Configure `GROQ_API_KEY` **apenas no serviço de back-end** — localmente ou no Render — e nunca como variável `VITE_*` ou no front-end. Ele analisa apenas o contexto autenticado do mês selecionado, não altera dados financeiros e pode retornar `503` em caso de indisponibilidade ou limite do Groq.
+
+### Testes e build
 
 ```powershell
-# Backend
+# Back-end
 Set-Location backend
 .\mvnw.cmd test
 
-# Frontend
+# Front-end
 Set-Location ..\frontend
 npm ci
 npm test
 npm run build
 ```
 
-The frontend build is production-ready and the test suite includes the dashboard, goals, import history, authentication, navigation, filters, and transaction interactions.
+O build do front-end é pronto para produção, e a suíte de testes cobre dashboard, metas, histórico de importação, autenticação, navegação, filtros e interações com transações.
 
-## API highlights
+---
 
-All routes except authentication require `Authorization: Bearer <token>`.
+## Licença
 
-| Method | Route | Purpose |
-| --- | --- | --- |
-| `POST` | `/api/v1/auth/register` | Create an account |
-| `POST` | `/api/v1/auth/login` | Authenticate and receive a JWT |
-| `GET` | `/api/v1/dashboard?month=YYYY-MM&filter=both` | Dashboard metrics and series |
-| `GET` | `/api/v1/transactions` | Paginated, filtered transactions |
-| `POST` | `/api/v1/imports` | Import a CSV statement |
-| `GET` | `/api/v1/imports` | List the authenticated user's import history |
-| `GET/POST/DELETE` | `/api/v1/category-rules` | Manage keyword classification rules |
-| `GET` | `/api/v1/budgets?month=YYYY-MM` | Read monthly limits |
-| `PUT` | `/api/v1/budgets/{categoryId}?month=YYYY-MM` | Create or update a limit |
+Este repositório é, por enquanto, um projeto de portfólio e aprendizado. Adicione uma licença específica antes de distribuí-lo como biblioteca ou produto comercial.
 
-## Repository map
+---
 
-```text
-backend/src/main/java/       API, domain services, security
-backend/src/main/resources/  Flyway migrations and configuration
-backend/src/test/            Controller and integration tests
-frontend/src/components/     Navigation, charts, forms, shared UI
-frontend/src/pages/          Route-level screens
-frontend/src/lib/             API client and auth session
-frontend/src/types/           Shared API contracts
-docs/                         Product specs, QA plans, and fixtures
-```
+## Autor
 
-## Security and privacy
-
-- Never commit real statements, credentials, JWT secrets, or personal financial data.
-- Passwords are hashed with BCrypt.
-- API data is scoped to the authenticated user.
-- CORS is explicitly configured rather than opened globally.
-- The local MVP stores its session in browser storage; production hardening should evaluate HttpOnly cookies and CSRF protection.
-
-## Contribution workflow
-
-1. Create a focused branch.
-2. Add or update tests before changing behavior.
-3. Run the relevant focused tests, the full suite, and the production build.
-4. Use an English Conventional Commit, for example:
-
-   ```text
-   feat(goals): add manual savings contributions
-   fix(api): scope import history to authenticated users
-   style(dashboard): apply Monolith Noir visual system
-   ```
-
-5. Push the branch and open a reviewable pull request.
-
-## License
-
-This repository is currently intended as a portfolio and learning project. Add a project-specific license before distributing it as a library or commercial product.
+**Sérgio Manso**<br>
+[LinkedIn](https://www.linkedin.com/in/sergiomanso/)
