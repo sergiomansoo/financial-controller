@@ -12,6 +12,12 @@
   <img src="https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white" />
 </p>
 
+<p align="center">
+  <a href="https://financial-controller-plum.vercel.app/"><strong>Aplicação web</strong></a>
+  &nbsp;·&nbsp;
+  <a href="https://financial-controller-fj6t.onrender.com/"><strong>API em produção</strong></a>
+</p>
+
 ---
 
 ## Sobre o projeto
@@ -24,6 +30,35 @@ Diferenciais do projeto:
 - **Integridade de dados por design**: importações são vinculadas ao usuário, candidatos a duplicata são preservados para revisão manual (em vez de descartados silenciosamente), arquivos inválidos não geram histórico, e migrations com Flyway garantem um schema reproduzível
 - **Clareza financeira**: receitas, despesas, investimentos, limites mensais, contribuições de metas, distribuição por categoria e evolução de 6 meses são calculados a partir do mesmo modelo de transação
 - **Qualidade como parte da entrega**: front-end coberto com Vitest e Testing Library, back-end coberto com JUnit, MockMvc e testes de integração; todo commit segue o padrão Conventional Commits
+
+---
+
+## Acesse a aplicação
+
+- **Front-end:** [financial-controller-plum.vercel.app](https://financial-controller-plum.vercel.app/)
+- **Back-end / API:** [financial-controller-fj6t.onrender.com](https://financial-controller-fj6t.onrender.com/)
+
+---
+
+## Principais telas
+
+### Visão geral
+
+O dashboard reúne receitas, despesas, economias, investimentos, saldo total, evolução dos últimos seis meses e a distribuição dos gastos por categoria.
+
+![Dashboard — visão geral](docs/screenshots/dashboard-visao-geral.png)
+
+### Metas e planejamento
+
+A tela de planejamento permite acompanhar limites mensais por categoria e objetivos de poupança, incluindo valor planejado, aportes e progresso até a meta.
+
+![Metas e planejamento](docs/screenshots/metas-planejamento.png)
+
+### Assistente financeiro com IA
+
+O assistente responde, em linguagem natural, a perguntas sobre o panorama financeiro do mês selecionado usando dados reais da conta autenticada.
+
+![Assistente financeiro com IA](docs/screenshots/assistente-financeiro.png)
 
 ---
 
@@ -154,7 +189,8 @@ frontend/src/components/     # Navegação, gráficos, formulários, UI comparti
 frontend/src/pages/          # Telas por rota
 frontend/src/lib/            # Cliente da API e sessão de autenticação
 frontend/src/types/          # Contratos de API compartilhados
-docs/                        # Specs de produto, planos de QA e fixtures
+docs/                        # Specs, planos de QA, fixtures e capturas das telas
+docs/screenshots/             # Imagens usadas na galeria deste README
 ```
 
 ---
